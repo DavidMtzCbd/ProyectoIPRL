@@ -3,5 +3,6 @@ const router = express.Router();
 const controller = require("../controllers/dashboardController");
 
 router.get("/alumno/:id", controller.getAlumnoDashboard);
+router.get("/admin", controller.getAdminDashboard);
 
 module.exports = router;
