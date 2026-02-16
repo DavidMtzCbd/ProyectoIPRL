@@ -3,36 +3,47 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Panel Administrador | IPRL</title>
+    <title>Panel IPRL</title>
     <link rel="stylesheet" href="./styles/main.css" />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>window.GOOGLE_CLIENT_ID = "";</script>
   </head>
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <h1>IPRL Admin</h1>
+        <h1>IPRL Panel</h1>
         <p class="sidebar__subtitle">Control escolar y financiero</p>
 
         <nav>
-          <button data-view="dashboard" class="nav-btn active">Dashboard</button>
-          <button data-view="alumnos" class="nav-btn">Alumnos</button>
-          <button data-view="cursos" class="nav-btn">Cursos</button>
-          <button data-view="pagos" class="nav-btn">Pagos</button>
+          <button data-view="dashboard" class="nav-btn active admin-only">Dashboard Admin</button>
+          <button data-view="alumnos" class="nav-btn admin-only">Alumnos</button>
+          <button data-view="cursos" class="nav-btn admin-only">Cursos</button>
+          <button data-view="pagos" class="nav-btn admin-only">Pagos</button>
+          <button data-view="alumno" class="nav-btn alumno-only">Dashboard Alumno</button>
         </nav>
       </aside>
 
       <main class="content">
         <header class="topbar">
           <h2 id="view-title">Dashboard</h2>
-          <form id="login-form" class="login-form">
-            <input id="usuario" type="text" placeholder="Usuario" required />
-            <input id="contrasena" type="password" placeholder="Contraseña" required />
-            <button type="submit">Iniciar sesión</button>
-          </form>
+
+          <div class="auth-area">
+            <form id="login-form" class="login-form">
+              <input id="usuario" type="text" placeholder="Usuario admin" required />
+              <input id="contrasena" type="password" placeholder="Contraseña" required />
+              <button type="submit">Iniciar sesión</button>
+            </form>
+
+            <div class="google-login-card">
+              <p>Alumnos: inicia sesión con Google</p>
+              <div id="google-signin-button"></div>
+            </div>
+          </div>
         </header>
 
         <section id="alerts"></section>
 
-        <section id="dashboard-view" class="view active">
+        <section id="dashboard-view" class="view active admin-only">
           <div class="cards">
             <article class="card">
               <h3>Total alumnos</h3>
@@ -62,7 +73,7 @@
           </article>
         </section>
 
-        <section id="alumnos-view" class="view">
+        <section id="alumnos-view" class="view admin-only">
           <article class="table-card">
             <h3>Alumnos registrados</h3>
             <table>
@@ -79,7 +90,7 @@
           </article>
         </section>
 
-        <section id="cursos-view" class="view">
+        <section id="cursos-view" class="view admin-only">
           <article class="table-card">
             <h3>Cursos</h3>
             <table>
@@ -94,7 +105,7 @@
           </article>
         </section>
 
-        <section id="pagos-view" class="view">
+        <section id="pagos-view" class="view admin-only">
           <article class="table-card">
             <h3>Pagos por alumno</h3>
             <form id="pagos-filter-form" class="inline-form">
@@ -112,6 +123,62 @@
                 </tr>
               </thead>
               <tbody id="pagos-table"></tbody>
+            </table>
+          </article>
+        </section>
+
+        <section id="alumno-view" class="view alumno-only">
+          <h2 class="alumno-title">Dashboard Alumno</h2>
+          <div class="alumno-grid">
+            <article class="alumno-card">
+              <div class="alumno-profile">
+                <img
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop"
+                  alt="Foto de perfil"
+                />
+                <div>
+                  <h3 id="alumno-nombre">-</h3>
+                  <p id="alumno-matricula">-</p>
+                </div>
+              </div>
+
+              <div class="saldo-box">
+                <span class="saldo-icon">$</span>
+                <div>
+                  <p>Saldo Actual</p>
+                  <strong id="alumno-saldo">$0.00</strong>
+                </div>
+              </div>
+            </article>
+
+            <article class="alumno-card semestre-card">
+              <h3>Semestre Actual</h3>
+              <div class="semestre-info">
+                <p>Inscripción: <span id="alumno-inscripcion">$0.00</span></p>
+                <p>Reinscripción: <span id="alumno-reinscripcion">$0.00</span></p>
+                <p>Colegiatura Mensual: <span id="alumno-colegiatura">$0.00</span></p>
+              </div>
+            </article>
+          </div>
+
+          <article class="table-card alumno-table-card">
+            <div class="table-header-row">
+              <h3>Historial de Pagos</h3>
+              <label>
+                Buscar:
+                <input id="alumno-search" type="text" placeholder="Concepto o fecha" />
+              </label>
+            </div>
+            <table>
+              <thead class="alumno-table-head">
+                <tr>
+                  <th>Fecha</th>
+                  <th>Concepto</th>
+                  <th>Monto</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="alumno-pagos-table"></tbody>
             </table>
           </article>
         </section>

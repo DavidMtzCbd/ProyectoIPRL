@@ -1,53 +1,31 @@
-# Frontend de Administrador (IPRL)
+# Frontend IPRL (Administrador + Alumno)
 
-Este frontend está pensado para que el administrador pueda operar sobre los módulos clave del sistema:
+Este frontend ahora contempla dos experiencias:
 
-- Resumen general (dashboard).
-- Consulta de alumnos.
-- Consulta de cursos.
-- Consulta de pagos por alumno.
+- **Administrador**: dashboard general, gestión de alumnos, cursos y pagos.
+- **Alumno**: login con Google OAuth 2.0 y dashboard de estado de cuenta/historial.
 
-## Organización recomendada
+## Configuración para Google Login (Alumno)
+
+1. Crea un **OAuth Client ID** en Google Cloud Console (tipo Web).
+2. En `frontend/index.html`, asigna el valor en:
+
+```html
+<script>window.GOOGLE_CLIENT_ID = "TU_CLIENT_ID.apps.googleusercontent.com";</script>
+```
+
+3. En backend configura el mismo `GOOGLE_CLIENT_ID` en `.env`.
+
+## Estructura
 
 ```text
 frontend/
-├── index.html              # Shell principal del panel admin
+├── index.html
 ├── styles/
-│   └── main.css            # Estilos globales del panel
-├── js/
-│   ├── main.js             # Orquestación de eventos y carga de vistas
-│   ├── api.js              # Cliente HTTP para consumir backend /api
-│   ├── state.js            # Estado global simple (token + vista actual)
-│   └── ui.js               # Renderizado de tablas, alertas y utilidades UI
-└── README.md               # Guía de arquitectura y siguientes pasos
+│   └── main.css
+└── js/
+    ├── main.js
+    ├── api.js
+    ├── state.js
+    └── ui.js
 ```
-
-## Flujo de uso
-
-1. Iniciar sesión con el formulario superior.
-2. Navegar entre vistas desde el menú lateral.
-3. Cargar módulos según la vista activa:
-   - `Dashboard`: métricas y últimos pagos.
-   - `Alumnos`: listado general.
-   - `Cursos`: listado general.
-   - `Pagos`: consulta por ID de alumno.
-
-## Siguiente nivel de organización (cuando escale)
-
-Cuando el proyecto crezca, migrar gradualmente a una arquitectura por módulos:
-
-```text
-frontend/
-├── src/
-│   ├── core/               # Config global, cliente HTTP, auth
-│   ├── modules/
-│   │   ├── dashboard/
-│   │   ├── alumnos/
-│   │   ├── cursos/
-│   │   └── pagos/
-│   ├── shared/             # Componentes reutilizables (tabla, tarjetas, toast)
-│   └── app/                # Layout principal y enrutamiento
-└── ...
-```
-
-Esto ayuda a mantener separación clara por dominio funcional en lugar de crecer por tipo de archivo.

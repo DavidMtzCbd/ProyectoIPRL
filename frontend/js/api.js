@@ -33,6 +33,13 @@ export function login(credentials) {
   });
 }
 
+export function loginWithGoogle(idToken) {
+  return request("/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ idToken }),
+  });
+}
+
 export function getAlumnos() {
   return request("/alumnos");
 }
@@ -43,6 +50,10 @@ export function getCursos() {
 
 export function getDashboardAdmin() {
   return request("/dashboard/admin");
+}
+
+export function getDashboardAlumnoAutenticado() {
+  return request("/dashboard/alumno/me");
 }
 
 export function getPagosPorAlumno(alumnoId) {

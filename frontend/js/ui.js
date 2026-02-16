@@ -10,9 +10,9 @@ function formatDate(value) {
   return new Date(value).toLocaleDateString("es-MX");
 }
 
-function fillTable(tableBodyId, rowsHtml) {
+function fillTable(tableBodyId, rowsHtml, colspan = 6) {
   const tableBody = document.getElementById(tableBodyId);
-  tableBody.innerHTML = rowsHtml || "<tr><td colspan='6'>Sin datos disponibles</td></tr>";
+  tableBody.innerHTML = rowsHtml || `<tr><td colspan='${colspan}'>Sin datos disponibles</td></tr>`;
 }
 
 export function showAlert(message, type = "success") {
@@ -22,6 +22,18 @@ export function showAlert(message, type = "success") {
   setTimeout(() => {
     alerts.innerHTML = "";
   }, 3500);
+}
+
+export function setupRoleUI(role) {
+  const isAlumno = role === "alumno";
+
+  document.querySelectorAll(".admin-only").forEach((element) => {
+    element.style.display = isAlumno ? "none" : "";
+  });
+
+  document.querySelectorAll(".alumno-only").forEach((element) => {
+    element.style.display = isAlumno ? "" : "none";
+  });
 }
 
 export function changeView(viewName) {
@@ -38,6 +50,7 @@ export function changeView(viewName) {
     alumnos: "Gestión de alumnos",
     cursos: "Gestión de cursos",
     pagos: "Consulta de pagos",
+    alumno: "Dashboard Alumno",
   };
 
   document.getElementById("view-title").textContent = titles[viewName] ?? "Panel";
@@ -79,7 +92,7 @@ export function renderAlumnos(alumnos) {
     )
     .join("");
 
-  fillTable("alumnos-table", rows);
+  fillTable("alumnos-table", rows, 4);
 }
 
 export function renderCursos(cursos) {
@@ -94,7 +107,7 @@ export function renderCursos(cursos) {
     )
     .join("");
 
-  fillTable("cursos-table", rows);
+  fillTable("cursos-table", rows, 2);
 }
 
 export function renderPagos(pagos) {
@@ -111,5 +124,48 @@ export function renderPagos(pagos) {
     )
     .join("");
 
-  fillTable("pagos-table", rows);
+  fillTable("pagos-table", rows, 4);
+}
+
+export function renderAlumnoDashboard(data, searchTerm = "") {
+  document.getElementById("alumno-nombre").textContent = [
+    data.alumno.nombre,
+    data.alumno.apellidoPaterno,
+    data.alumno.apellidoMaterno,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  document.getElementById("alumno-matricula").textContent = data.alumno.matricula;
+  document.getElementById("alumno-saldo").textContent = formatMoney(data.saldoActual);
+
+  const semestreActual = data.semestres?.[0];
+  document.getElementById("alumno-inscripcion").textContent = formatMoney(semestreActual?.inscripcion);
+  document.getElementById("alumno-reinscripcion").textContent = formatMoney(semestreActual?.reinscripcion);
+  document.getElementById("alumno-colegiatura").textContent = formatMoney(
+    semestreActual?.colegiaturaMensual,
+  );
+
+  const textoBusqueda = searchTerm.trim().toLowerCase();
+  const pagosFiltrados = data.pagos.filter((pago) => {
+    if (!textoBusqueda) return true;
+
+    const fecha = formatDate(pago.fechaPago).toLowerCase();
+    const concepto = String(pago.concepto ?? "").toLowerCase();
+    return fecha.includes(textoBusqueda) || concepto.includes(textoBusqueda);
+  });
+
+  const rows = pagosFiltrados
+    .map(
+      (pago) => `
+      <tr>
+        <td>${formatDate(pago.fechaPago)}</td>
+        <td>${pago.concepto}</td>
+        <td>${formatMoney(pago.monto)}</td>
+        <td>Pagado</td>
+      </tr>
+    `,
+    )
+    .join("");
+
+  fillTable("alumno-pagos-table", rows, 4);
 }

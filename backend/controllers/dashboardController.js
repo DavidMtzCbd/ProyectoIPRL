@@ -4,55 +4,72 @@ const Pago = require("../models/Pago");
 
 const { logger } = require("../config/logger");
 
+async function construirDashboardAlumno(alumnoId) {
+  const alumno = await Alumno.findById(alumnoId);
+
+  if (!alumno) {
+    return null;
+  }
+
+  const semestres = await Semestre.find({ alumnoID: alumno._id });
+
+  const pagos = await Pago.find({
+    alumnoID: alumno._id,
+  }).sort({ fechaPago: -1 });
+
+  const totalPagos = pagos.reduce((acc, pago) => acc + pago.monto, 0);
+
+  const totalCostos = semestres.reduce(
+    (acc, semestre) =>
+      acc +
+      semestre.inscripcion +
+      semestre.reinscripcion +
+      semestre.colegiaturaMensual * semestre.mensualidades.length,
+    0,
+  );
+
+  const saldoActual = totalCostos - totalPagos;
+
+  return {
+    alumno,
+    saldoActual,
+    semestres,
+    pagos,
+  };
+}
+
 exports.getAlumnoDashboard = async (req, res) => {
   try {
-    const alumno = await Alumno.findById(req.params.id);
+    const data = await construirDashboardAlumno(req.params.id);
 
-    if (!alumno) {
+    if (!data) {
       return res.status(404).json({ message: "Alumno no encontrado" });
     }
 
-    const semestres = await Semestre.find({ alumnoID: alumno._id });
-
-    const pagos = await Pago.find({
-      alumnoID: alumno._id,
-    }).sort({ fechaPago: -1 });
-
-    const totalPagos = pagos.reduce((acc, pago) => acc + pago.monto, 0);
-
-    const totalCostos = semestres.reduce(
-      (acc, semestre) =>
-        acc +
-        semestre.inscripcion +
-        semestre.reinscripcion +
-        semestre.colegiaturaMensual * semestre.mensualidades.length,
-      0,
-    );
-
-    const saldoActual = totalCostos - totalPagos;
-
-    res.json({
-      alumno,
-      saldoActual,
-      semestres,
-      pagos,
-    });
+    res.json(data);
   } catch (error) {
     logger.error("Error en dashboard de Alumno", error);
     res.status(500).json({ message: "Error interno del servidor " });
   }
 };
 
-/**
- * En esta sección se obtiene la información general del dashboard para
- * el administrador, incluye total de alumnos, los pagos totales, y la parte
- * de la tabla de los ultimos pagos realizados.
- */
+exports.getMiDashboardAlumno = async (req, res) => {
+  try {
+    const data = await construirDashboardAlumno(req.usuario.alumnoId);
+
+    if (!data) {
+      return res.status(404).json({ message: "Alumno no encontrado" });
+    }
+
+    res.json(data);
+  } catch (error) {
+    logger.error("Error en dashboard de Alumno autenticado", error);
+    res.status(500).json({ message: "Error interno del servidor " });
+  }
+};
 
 exports.getAdminDashboard = async (req, res) => {
   try {
-    //Seccion en la que se obtendrá la informacion general del dashboard
-
     const totalAlumnos = await Alumno.countDocuments();
 
     const alumnos = await Alumno.find();
@@ -79,7 +96,6 @@ exports.getAdminDashboard = async (req, res) => {
       }
     }
 
-    //Tabla con el registro de los pagos
     const pagos = await Pago.find()
       .populate("alumnoID", "nombre matricula correo")
       .sort({ fechaPago: -1 });
