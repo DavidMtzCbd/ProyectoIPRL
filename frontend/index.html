@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel Administrador | IPRL</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h1>IPRL Admin</h1>
+        <p class="sidebar__subtitle">Control escolar y financiero</p>
+
+        <nav>
+          <button data-view="dashboard" class="nav-btn active">Dashboard</button>
+          <button data-view="alumnos" class="nav-btn">Alumnos</button>
+          <button data-view="cursos" class="nav-btn">Cursos</button>
+          <button data-view="pagos" class="nav-btn">Pagos</button>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <h2 id="view-title">Dashboard</h2>
+          <form id="login-form" class="login-form">
+            <input id="usuario" type="text" placeholder="Usuario" required />
+            <input id="contrasena" type="password" placeholder="Contraseña" required />
+            <button type="submit">Iniciar sesión</button>
+          </form>
+        </header>
+
+        <section id="alerts"></section>
+
+        <section id="dashboard-view" class="view active">
+          <div class="cards">
+            <article class="card">
+              <h3>Total alumnos</h3>
+              <p id="total-alumnos">-</p>
+            </article>
+            <article class="card">
+              <h3>Alumnos con adeudo</h3>
+              <p id="alumnos-adeudo">-</p>
+            </article>
+          </div>
+
+          <article class="table-card">
+            <h3>Últimos pagos</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Matrícula</th>
+                  <th>Concepto</th>
+                  <th>Monto</th>
+                  <th>Método</th>
+                  <th>Factura</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-pagos-table"></tbody>
+            </table>
+          </article>
+        </section>
+
+        <section id="alumnos-view" class="view">
+          <article class="table-card">
+            <h3>Alumnos registrados</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Matrícula</th>
+                  <th>Correo</th>
+                  <th>Curso</th>
+                </tr>
+              </thead>
+              <tbody id="alumnos-table"></tbody>
+            </table>
+          </article>
+        </section>
+
+        <section id="cursos-view" class="view">
+          <article class="table-card">
+            <h3>Cursos</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Descripción</th>
+                </tr>
+              </thead>
+              <tbody id="cursos-table"></tbody>
+            </table>
+          </article>
+        </section>
+
+        <section id="pagos-view" class="view">
+          <article class="table-card">
+            <h3>Pagos por alumno</h3>
+            <form id="pagos-filter-form" class="inline-form">
+              <input id="alumno-id" type="text" placeholder="ID del alumno" required />
+              <button type="submit">Consultar</button>
+            </form>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Concepto</th>
+                  <th>Monto</th>
+                  <th>Método</th>
+                </tr>
+              </thead>
+              <tbody id="pagos-table"></tbody>
+            </table>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
