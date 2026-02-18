@@ -36,7 +36,6 @@ export function changeView(viewName) {
   const titles = {
     dashboard: "Dashboard",
     alumnos: "Gestión de alumnos",
-    cursos: "Gestión de cursos",
     pagos: "Consulta de pagos",
   };
 

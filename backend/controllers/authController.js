@@ -19,7 +19,7 @@ exports.iniciarSesion = async (req, res) => {
   }
 
   // Verificar que la contraseña sea correcta
-  contrasenaValida = await bcryptjs.compare(contrasena, usuarioDB.contrasena);
+  const contrasenaValida = await bcryptjs.compare(contrasena, usuarioDB.contrasena);
   if (!contrasenaValida) {
     return res.status(400).json({ mensaje: "Contraseña incorrecta" });
   }
@@ -33,4 +33,22 @@ exports.iniciarSesion = async (req, res) => {
     { expiresIn: "8h" },
   );
   res.json({ token, rol: usuarioDB.rol });
+};
+
+exports.registrarUsuario = async (req, res) => {
+  try {
+    const { usuario, contrasena, rol } = req.body;
+    const salt = await bcryptjs.genSalt(10);
+    const contrasenaHashed = await bcryptjs.hash(contrasena, salt);
+
+    const nuevoUsuario = await Usuario.create({
+      usuario,
+      contrasena: contrasenaHashed,
+      rol
+    });
+
+    res.status(201).json({ mensaje: "Usuario creado", usuario: nuevoUsuario.usuario });
+  } catch (error) {
+    res.status(400).json({ mensaje: "Error al registrar", error: error.message });
+  }
 };

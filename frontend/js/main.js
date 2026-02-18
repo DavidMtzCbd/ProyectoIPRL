@@ -69,10 +69,10 @@ async function bootstrap() {
     .getElementById("pagos-filter-form")
     .addEventListener("submit", async (event) => {
       event.preventDefault();
-      const alumnoId = document.getElementById("alumno-id").value.trim();
+      const matricula = document.getElementById("alumno-id").value.trim();
 
       try {
-        const pagos = await getPagosPorAlumno(alumnoId);
+        const pagos = await getPagosPorAlumno(matricula);
         renderPagos(pagos);
       } catch (error) {
         showAlert(error.message, "error");
