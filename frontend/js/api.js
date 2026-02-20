@@ -45,6 +45,6 @@ export function getDashboardAdmin() {
   return request("/dashboard/admin");
 }
 
-export function getPagosPorAlumno(alumnoId) {
-  return request(`/pagos/alumno/${alumnoId}`);
+export function getPagosPorAlumno(matricula) {
+  return request(`/pagos/alumno/${matricula}`);
 }

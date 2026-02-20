@@ -31,6 +31,11 @@ async function loadCursos() {
 }
 
 async function bootstrap() {
+  if (appState.token) {
+    console.log("Usuario: ", appState.user?.usuario || "Administrador");
+    console.log("Token: ", appState.token);
+  }
+
   document.querySelectorAll(".nav-btn").forEach((button) => {
     button.addEventListener("click", async () => {
       const selectedView = button.dataset.view;
