@@ -14,6 +14,7 @@ import {
   renderPagos,
   showAlert,
 } from "./ui.js";
+import { initLogout } from "./logout.js";
 
 async function loadDashboard() {
   const dashboard = await getDashboardAdmin();
@@ -31,11 +32,30 @@ async function loadCursos() {
 }
 
 async function bootstrap() {
+  // Inicializar funcionalidad de logout
+  await initLogout();
+
+  // Manejo del menú desplegable del usuario
+  const menuTrigger = document.getElementById("user-menu-trigger");
+  const dropdown = document.getElementById("user-dropdown");
+
+  // Abrir/Cerrar menú al hacer clic en el avatar
+  menuTrigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("active");
+  });
+
+  document.getElementById("nav-logout").addEventListener("click", () => {
+    dropdown.classList.remove("active");
+  });
+
+  // Mostrar información del usuario en la consola (para desarrollo)
   if (appState.token) {
     console.log("Usuario: ", appState.user?.usuario || "Administrador");
     console.log("Token: ", appState.token);
   }
 
+  // Manejo de navegación entre vistas
   document.querySelectorAll(".nav-btn").forEach((button) => {
     button.addEventListener("click", async () => {
       const selectedView = button.dataset.view;
