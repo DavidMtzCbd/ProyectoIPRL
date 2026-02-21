@@ -1,0 +1,25 @@
+<section class="view active">
+  <article class="table-card">
+    <h3>Consultar pagos por alumno</h3>
+    <form id="pagos-filter-form" class="inline-form">
+      <input
+        id="alumno-id"
+        type="text"
+        placeholder="Matrícula del alumno"
+        required
+      />
+      <button type="submit">Consultar</button>
+    </form>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Concepto</th>
+          <th>Monto</th>
+          <th>Método</th>
+        </tr>
+      </thead>
+      <tbody id="pagos-table"></tbody>
+    </table>
+  </article>
+</section>
