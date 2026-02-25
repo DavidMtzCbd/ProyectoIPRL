@@ -33,9 +33,53 @@ export function login(credentials) {
   });
 }
 
+// ── Alumnos ──────────────────────────────────────────────────────────────────
+
 export function getAlumnos() {
   return request("/alumnos");
 }
+
+export function getAlumnoById(id) {
+  return request(`/alumnos/${id}`);
+}
+
+export function createAlumno(data) {
+  return request("/alumnos", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function getAlumnoPagos(id) {
+  return request(`/alumnos/${id}/pagos`);
+}
+
+export function getAlumnoByMatricula(matricula) {
+  return request(`/alumnos/matricula/${matricula}`);
+}
+
+// ── Pagos ─────────────────────────────────────────────────────────────────────
+
+export function getAllPagos() {
+  return request("/pagos");
+}
+
+export function getPagoById(id) {
+  return request(`/pagos/${id}`);
+}
+
+export function createPago(data) {
+  return request("/pagos", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function getPagosPorAlumno(matricula) {
+  return request(`/pagos/alumno/${matricula}`);
+}
+
+// ── Otros ─────────────────────────────────────────────────────────────────────
 
 export function getCursos() {
   return request("/cursos");
@@ -43,8 +87,4 @@ export function getCursos() {
 
 export function getDashboardAdmin() {
   return request("/dashboard/admin");
-}
-
-export function getPagosPorAlumno(matricula) {
-  return request(`/pagos/alumno/${matricula}`);
 }

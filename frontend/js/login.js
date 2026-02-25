@@ -1,5 +1,5 @@
 import { login } from "./api.js";
-import { setToken, setUser } from "./state.js"; // Importar setUser
+import { setToken, setUsuario } from "./state.js";
 
 const loginForm = document.getElementById("login-form");
 const submitBtn = loginForm.querySelector(".btn-login");
@@ -18,7 +18,7 @@ loginForm.addEventListener("submit", async (e) => {
 
     // Guardamos ambos datos para que persistan tras la redirección
     setToken(data.token);
-    setUser(usuarioInput);
+    setUsuario(usuarioInput);
 
     // Opcional: Log rápido antes de redirigir
     console.log("Acceso concedido para:", usuarioInput);

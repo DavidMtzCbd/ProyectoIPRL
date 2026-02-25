@@ -6,9 +6,17 @@ Cada ruta está asociada a una función del controlador de alumnos que maneja la
 const express = require("express");
 const router = express.Router();
 const alumnosController = require("../controllers/alumnosController");
+const pagoController = require("../controllers/pagoController");
 
 // Ruta para obtener todos los alumnos
 router.get("/", alumnosController.getAlumnos);
+
+// Ruta para buscar alumno por matrícula (debe ir ANTES de /:id)
+router.get("/matricula/:matricula", alumnosController.getAlumnoByMatricula);
+
+// Ruta para obtener el historial de pagos de un alumno por su ID
+// IMPORTANTE: debe ir ANTES de /:id para evitar conflicto de rutas
+router.get("/:id/pagos", pagoController.obtenerPagosAlumnoPorId);
 
 // Ruta para obtener un alumno por ID
 router.get("/:id", alumnosController.getAlumnoById);

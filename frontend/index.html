@@ -5,17 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Panel Administrador | IPRL</title>
     <link rel="stylesheet" href="./styles/main.css" />
+    <link
+      rel="stylesheet"
+      href="./node_modules/bootstrap-icons/font/bootstrap-icons.min.css"
+    />
   </head>
   <body>
     <div class="user-menu-container">
       <div class="user-profile-trigger" id="user-menu-trigger">
         <span class="username-label">Admin</span>
-        <div class="user-avatar"><i class="user-icon">👤</i></div>
+        <div class="user-avatar">
+          <i class="bi bi-person-fill user-icon"></i>
+        </div>
       </div>
       <ul class="user-dropdown-menu" id="user-dropdown">
         <li>
           <button id="nav-logout" class="dropdown-item">
-            <span>🚪</span> Cerrar sesión
+            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
           </button>
         </li>
       </ul>
@@ -27,10 +33,14 @@
         <p class="sidebar__subtitle">Control escolar y financiero</p>
         <nav id="main-nav">
           <button data-view="dashboard" class="nav-btn active">
-            Últimos pagos
+            <i class="bi bi-speedometer2"></i> Últimos pagos
           </button>
-          <button data-view="alumnos" class="nav-btn">Alumnos</button>
-          <button data-view="pagos" class="nav-btn">Pagos</button>
+          <button data-view="alumnos" class="nav-btn">
+            <i class="bi bi-people-fill"></i> Alumnos
+          </button>
+          <button data-view="pagos" class="nav-btn">
+            <i class="bi bi-credit-card-fill"></i> Pagos
+          </button>
         </nav>
       </aside>
 

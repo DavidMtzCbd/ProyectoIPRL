@@ -1,28 +1,204 @@
-import { getPagosPorAlumno } from "../api.js";
+import {
+  getAllPagos,
+  getPagosPorAlumno,
+  getPagoById,
+  createPago,
+  getAlumnoByMatricula,
+} from "../api.js";
+
 import { formatMoney, formatDate, fillTable, showAlert } from "../ui.js";
 
-export async function initPagos() {
+// ── Helpers de modal ──────────────────────────────────────────────────────────
+
+function openModal(id) {
+  document.getElementById(id).style.display = "flex";
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+function bindCloseButtons() {
+  document.querySelectorAll("[data-close]").forEach((btn) => {
+    btn.addEventListener("click", () => closeModal(btn.dataset.close));
+  });
+  document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.style.display = "none";
+    });
+  });
+}
+
+// ── Tabla de pagos ─────────────────────────────────────────────────────────────
+
+let todosPagos = [];
+
+async function cargarTodosPagos() {
+  try {
+    todosPagos = await getAllPagos();
+    renderTablaPagos(todosPagos);
+  } catch (error) {
+    showAlert("Error al cargar pagos: " + error.message, "error");
+  }
+}
+
+function renderTablaPagos(pagos) {
+  const rows = pagos
+    .map(
+      (p) => `
+    <tr>
+      <td>${formatDate(p.fechaPago)}</td>
+      <td>${p.alumnoID?.matricula ?? "-"}</td>
+      <td>${p.alumnoID ? `${p.alumnoID.nombre} ${p.alumnoID.apellidoPaterno}` : "-"}</td>
+      <td>${p.concepto}</td>
+      <td>${formatMoney(p.monto)}</td>
+      <td>${p.metodoPago}</td>
+      <td>
+        <button class="btn-sm btn-action btn-ver-pago" data-id="${p._id}">
+          <i class="bi bi-eye-fill"></i> Ver detalle
+        </button>
+      </td>
+    </tr>
+  `,
+    )
+    .join("");
+  fillTable("pagos-table", rows);
+
+  // Vincular botones "Ver detalle"
+  document.querySelectorAll(".btn-ver-pago").forEach((btn) => {
+    btn.addEventListener("click", () => abrirDetallePago(btn.dataset.id));
+  });
+}
+
+// ── Buscador por matrícula ────────────────────────────────────────────────────
+
+function initBuscador() {
   const form = document.getElementById("pagos-filter-form");
+  const btnLimpiar = document.getElementById("btn-limpiar-filtro");
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const matricula = document.getElementById("alumno-id").value.trim();
+    if (!matricula) return;
     try {
       const pagos = await getPagosPorAlumno(matricula);
+      if (!pagos.length) {
+        showAlert("No se encontraron pagos para esa matrícula.", "error");
+        return;
+      }
+      // Los pagos del alumno por matrícula no tienen populate, adaptar la UI
       const rows = pagos
         .map(
-          (pago) => `
+          (p) => `
         <tr>
-          <td>${formatDate(pago.fechaPago)}</td>
-          <td>${pago.concepto}</td>
-          <td>${formatMoney(pago.monto)}</td>
-          <td>${pago.metodoPago}</td>
-        </tr>
-      `,
+          <td>${formatDate(p.fechaPago)}</td>
+          <td>${matricula}</td>
+          <td>-</td>
+          <td>${p.concepto}</td>
+          <td>${formatMoney(p.monto)}</td>
+          <td>${p.metodoPago}</td>
+          <td>
+            <button class="btn-sm btn-action btn-ver-pago" data-id="${p._id}">
+              <i class="bi bi-eye-fill"></i> Ver detalle
+            </button>
+          </td>
+        </tr>`,
         )
         .join("");
       fillTable("pagos-table", rows);
+      document.querySelectorAll(".btn-ver-pago").forEach((btn) => {
+        btn.addEventListener("click", () => abrirDetallePago(btn.dataset.id));
+      });
     } catch (error) {
       showAlert(error.message, "error");
     }
   });
+
+  btnLimpiar.addEventListener("click", () => {
+    document.getElementById("alumno-id").value = "";
+    renderTablaPagos(todosPagos);
+  });
+}
+
+// ── Detalle de pago ───────────────────────────────────────────────────────────
+
+async function abrirDetallePago(id) {
+  try {
+    const pago = await getPagoById(id);
+    const alumno = pago.alumnoID;
+    const nombreAlumno = alumno
+      ? `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`
+      : "—";
+
+    const grid = document.getElementById("pago-info-grid");
+    grid.innerHTML = `
+      <div class="detail-item"><span>Fecha de pago</span><span>${formatDate(pago.fechaPago)}</span></div>
+      <div class="detail-item"><span>Monto</span><span>${formatMoney(pago.monto)}</span></div>
+      <div class="detail-item"><span>Concepto</span><span>${pago.concepto}</span></div>
+      <div class="detail-item"><span>Método de pago</span><span>${pago.metodoPago}</span></div>
+      <div class="detail-item"><span>Alumno</span><span>${nombreAlumno}</span></div>
+      <div class="detail-item"><span>Matrícula</span><span>${alumno?.matricula ?? "—"}</span></div>
+      <div class="detail-item"><span>Referencia</span><span>${pago.referencia ?? "—"}</span></div>
+      <div class="detail-item"><span>Factura</span><span>${pago.factura ?? "Sin factura"}</span></div>
+    `;
+    openModal("modal-detalle-pago");
+  } catch (error) {
+    showAlert("Error al cargar el pago: " + error.message, "error");
+  }
+}
+
+// ── Registrar pago ────────────────────────────────────────────────────────────
+
+function initRegistrarPago() {
+  document
+    .getElementById("btn-registrar-pago")
+    .addEventListener("click", () => {
+      document.getElementById("form-registrar-pago").reset();
+      // Poner la fecha de hoy por defecto
+      document.getElementById("p-fecha").value = new Date()
+        .toISOString()
+        .slice(0, 10);
+      openModal("modal-registrar-pago");
+    });
+
+  document
+    .getElementById("form-registrar-pago")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const matriculaBuscar = document
+        .getElementById("p-matricula")
+        .value.trim();
+
+      try {
+        // Buscar el alumno por matrícula para obtener su _id
+        const alumno = await getAlumnoByMatricula(matriculaBuscar);
+
+        const data = {
+          alumnoID: alumno._id,
+          fechaPago: document.getElementById("p-fecha").value,
+          monto: Number(document.getElementById("p-monto").value),
+          metodoPago: document.getElementById("p-metodo").value,
+          concepto: document.getElementById("p-concepto").value,
+          referencia:
+            document.getElementById("p-referencia").value || undefined,
+          factura: document.getElementById("p-factura").value || undefined,
+        };
+
+        await createPago(data);
+        closeModal("modal-registrar-pago");
+        showAlert("Pago registrado correctamente ✔", "success");
+        await cargarTodosPagos();
+      } catch (error) {
+        showAlert("Error: " + error.message, "error");
+      }
+    });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+export async function initPagos() {
+  bindCloseButtons();
+  initBuscador();
+  initRegistrarPago();
+  await cargarTodosPagos();
 }
