@@ -50,6 +50,13 @@ export function createAlumno(data) {
   });
 }
 
+export function updateAlumno(id, data) {
+  return request(`/alumnos/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export function getAlumnoPagos(id) {
   return request(`/alumnos/${id}/pagos`);
 }

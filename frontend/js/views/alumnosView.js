@@ -3,7 +3,9 @@ import {
   createAlumno,
   getAlumnoById,
   getAlumnoPagos,
+  updateAlumno,
 } from "../api.js";
+
 import { fillTable, showAlert, formatDate, formatMoney } from "../ui.js";
 
 // ── Helpers de modal ──────────────────────────────────────────────────────────
@@ -34,7 +36,13 @@ let todosLosAlumnos = [];
 
 async function cargarAlumnos() {
   try {
-    todosLosAlumnos = await getAlumnos();
+    const data = await getAlumnos();
+    // Ordenar alfabéticamente: apellido paterno → materno → nombre
+    todosLosAlumnos = data.sort((a, b) => {
+      const nombreA = `${a.apellidoPaterno} ${a.apellidoMaterno} ${a.nombre}`;
+      const nombreB = `${b.apellidoPaterno} ${b.apellidoMaterno} ${b.nombre}`;
+      return nombreA.localeCompare(nombreB, "es", { sensitivity: "base" });
+    });
     renderTablaAlumnos(todosLosAlumnos);
   } catch (error) {
     showAlert("Error al cargar alumnos: " + error.message, "error");
@@ -56,14 +64,19 @@ function renderTablaAlumnos(alumnos) {
     .map(
       (a) => `
     <tr>
-      <td>${a.nombre} ${a.apellidoPaterno} ${a.apellidoMaterno}</td>
+      <td>${a.apellidoPaterno} ${a.apellidoMaterno} ${a.nombre}</td>
       <td>${a.matricula}</td>
       <td>${a.correo}</td>
       <td>${a.ofertaAcademica}</td>
       <td>${badgeEstatus(a.estatus)}</td>
-      <td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn-sm btn-action btn-ver-alumno" data-id="${a._id}">
-          <i class="bi bi-eye-fill"></i> Ver detalle
+          <i class="bi bi-eye-fill"></i> Ver
+        </button>
+        <button class="btn-sm btn-primary btn-editar-alumno" data-id="${a._id}"
+          data-estatus="${a.estatus}" data-saldo="${a.saldoActual}"
+          data-nombre="${a.apellidoPaterno} ${a.apellidoMaterno} ${a.nombre}">
+          <i class="bi bi-pencil-fill"></i> Editar
         </button>
       </td>
     </tr>
@@ -72,9 +85,82 @@ function renderTablaAlumnos(alumnos) {
     .join("");
   fillTable("alumnos-table", rows);
 
-  // Vincular botones "Ver detalle"
   document.querySelectorAll(".btn-ver-alumno").forEach((btn) => {
     btn.addEventListener("click", () => abrirDetalleAlumno(btn.dataset.id));
+  });
+  document.querySelectorAll(".btn-editar-alumno").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.getElementById("edit-alumno-nombre").textContent =
+        btn.dataset.nombre;
+      document.getElementById("edit-estatus").value = btn.dataset.estatus;
+      document.getElementById("edit-saldo").value = btn.dataset.saldo ?? 0;
+      document
+        .getElementById("form-editar-alumno")
+        .setAttribute("data-id", btn.dataset.id);
+      openModal("modal-editar-alumno");
+    });
+  });
+}
+
+// ── Editar alumno ─────────────────────────────────────────────────────────────
+
+function initEditarAlumno() {
+  document
+    .getElementById("form-editar-alumno")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = e.target.getAttribute("data-id");
+      const data = {
+        estatus: document.getElementById("edit-estatus").value,
+        saldoActual: Number(document.getElementById("edit-saldo").value),
+      };
+      try {
+        await updateAlumno(id, data);
+        closeModal("modal-editar-alumno");
+        showAlert("Alumno actualizado correctamente ✔", "success");
+        await cargarAlumnos();
+        initFiltros();
+      } catch (error) {
+        showAlert("Error al actualizar: " + error.message, "error");
+      }
+    });
+}
+
+// ── Filtros de la tabla ───────────────────────────────────────────────────────
+
+function initFiltros() {
+  const inputTexto = document.getElementById("filtro-alumno-texto");
+  const selectEstatus = document.getElementById("filtro-alumno-estatus");
+  const btnLimpiar = document.getElementById("btn-limpiar-filtros-alumno");
+
+  function aplicarFiltros() {
+    const texto = inputTexto.value.toLowerCase().trim();
+    const estatus = selectEstatus.value;
+
+    const filtrados = todosLosAlumnos.filter((a) => {
+      const nombreCompleto =
+        `${a.nombre} ${a.apellidoPaterno} ${a.apellidoMaterno}`.toLowerCase();
+      const coincideTexto =
+        !texto ||
+        nombreCompleto.includes(texto) ||
+        String(a.matricula).includes(texto) ||
+        a.ofertaAcademica.toLowerCase().includes(texto);
+
+      const coincideEstatus = !estatus || a.estatus === estatus;
+
+      return coincideTexto && coincideEstatus;
+    });
+
+    renderTablaAlumnos(filtrados);
+  }
+
+  inputTexto.addEventListener("input", aplicarFiltros);
+  selectEstatus.addEventListener("change", aplicarFiltros);
+
+  btnLimpiar.addEventListener("click", () => {
+    inputTexto.value = "";
+    selectEstatus.value = "";
+    renderTablaAlumnos(todosLosAlumnos);
   });
 }
 
@@ -159,5 +245,7 @@ function initAgregarAlumno() {
 export async function initAlumnos() {
   bindCloseButtons();
   initAgregarAlumno();
+  initEditarAlumno();
   await cargarAlumnos();
+  initFiltros();
 }

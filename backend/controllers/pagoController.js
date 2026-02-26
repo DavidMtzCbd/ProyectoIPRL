@@ -69,9 +69,12 @@ exports.obtenerPagosAlumno = async (req, res) => {
     }
 
     // 2. Ahora buscamos los pagos usando el ID real del alumno encontrado
-    const pagos = await Pago.find({
-      alumnoID: alumno._id,
-    }).sort({ fechaPago: -1 });
+    const pagos = await Pago.find({ alumnoID: alumno._id })
+      .populate(
+        "alumnoID",
+        "nombre apellidoPaterno apellidoMaterno matricula correo",
+      )
+      .sort({ fechaPago: -1 });
 
     res.json(pagos);
   } catch (error) {

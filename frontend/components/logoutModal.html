@@ -1,13 +1,16 @@
-<link rel="stylesheet" href="./styles/logoutModal.css" />
-
 <div id="logout-modal" class="modal-overlay">
   <div class="modal-content">
-    <div class="modal-icon">!!!</div>
+    <div class="modal-icon">
+      <i class="bi bi-box-arrow-right"></i>
+    </div>
     <h2>¿Cerrar sesión?</h2>
-    <p>¿Estás seguro de cerrar sesión?</p>
+    <p>
+      Tu sesión actual se cerrará y tendrás que volver a iniciar sesión para
+      acceder al sistema.
+    </p>
     <div class="modal-actions">
-      <button id="btn-cancel-logout" class="btn-secondary">Regresar</button>
-      <button id="btn-confirm-logout" class="btn-primary">Cerrar Sesión</button>
+      <button id="btn-cancel-logout" class="btn-secondary">Cancelar</button>
+      <button id="btn-confirm-logout" class="btn-danger">Cerrar sesión</button>
     </div>
   </div>
 </div>

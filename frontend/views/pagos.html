@@ -37,6 +37,8 @@
           <th>Concepto</th>
           <th>Monto</th>
           <th>Método</th>
+          <th>Referencia</th>
+          <th>Factura</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -63,6 +65,7 @@
               required
               placeholder="Ingresa la matrícula"
             />
+            <div id="alumno-preview"></div>
           </div>
           <div class="form-group">
             <label for="p-fecha">Fecha de pago</label>
@@ -103,16 +106,15 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="p-referencia">Referencia (opcional)</label>
-            <input
-              id="p-referencia"
-              type="text"
-              placeholder="Número de referencia"
-            />
+            <label for="p-referencia">Referencia</label>
+            <input id="p-referencia" type="text" placeholder="R.000000" />
           </div>
-          <div class="form-group full-width">
-            <label for="p-factura">Factura (opcional)</label>
-            <input id="p-factura" type="text" placeholder="Folio de factura" />
+          <div class="form-group">
+            <label for="p-factura">¿Requiere factura?</label>
+            <select id="p-factura">
+              <option value="No">No</option>
+              <option value="Sí">Sí</option>
+            </select>
           </div>
         </div>
       </div>

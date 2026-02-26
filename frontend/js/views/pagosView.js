@@ -49,10 +49,12 @@ function renderTablaPagos(pagos) {
     <tr>
       <td>${formatDate(p.fechaPago)}</td>
       <td>${p.alumnoID?.matricula ?? "-"}</td>
-      <td>${p.alumnoID ? `${p.alumnoID.nombre} ${p.alumnoID.apellidoPaterno}` : "-"}</td>
+      <td>${p.alumnoID ? `${p.alumnoID.apellidoPaterno} ${p.alumnoID.apellidoMaterno} ${p.alumnoID.nombre}` : "-"}</td>
       <td>${p.concepto}</td>
       <td>${formatMoney(p.monto)}</td>
       <td>${p.metodoPago}</td>
+      <td>${p.referencia ?? "-"}</td>
+      <td>${p.factura === "Sí" || p.factura === true ? "<span class='badge-active'>Sí</span>" : "<span class='badge-inactive'>No</span>"}</td>
       <td>
         <button class="btn-sm btn-action btn-ver-pago" data-id="${p._id}">
           <i class="bi bi-eye-fill"></i> Ver detalle
@@ -64,7 +66,6 @@ function renderTablaPagos(pagos) {
     .join("");
   fillTable("pagos-table", rows);
 
-  // Vincular botones "Ver detalle"
   document.querySelectorAll(".btn-ver-pago").forEach((btn) => {
     btn.addEventListener("click", () => abrirDetallePago(btn.dataset.id));
   });
@@ -86,17 +87,19 @@ function initBuscador() {
         showAlert("No se encontraron pagos para esa matrícula.", "error");
         return;
       }
-      // Los pagos del alumno por matrícula no tienen populate, adaptar la UI
+      // Los pagos ya vienen con populate del alumno
       const rows = pagos
         .map(
           (p) => `
         <tr>
           <td>${formatDate(p.fechaPago)}</td>
-          <td>${matricula}</td>
-          <td>-</td>
+          <td>${p.alumnoID?.matricula ?? matricula}</td>
+          <td>${p.alumnoID ? `${p.alumnoID.apellidoPaterno} ${p.alumnoID.apellidoMaterno} ${p.alumnoID.nombre}` : "-"}</td>
           <td>${p.concepto}</td>
           <td>${formatMoney(p.monto)}</td>
           <td>${p.metodoPago}</td>
+          <td>${p.referencia ?? "-"}</td>
+          <td>${p.factura === "Sí" || p.factura === true ? "<span class='badge-active'>Sí</span>" : "<span class='badge-inactive'>No</span>"}</td>
           <td>
             <button class="btn-sm btn-action btn-ver-pago" data-id="${p._id}">
               <i class="bi bi-eye-fill"></i> Ver detalle
@@ -105,6 +108,7 @@ function initBuscador() {
         </tr>`,
         )
         .join("");
+
       fillTable("pagos-table", rows);
       document.querySelectorAll(".btn-ver-pago").forEach((btn) => {
         btn.addEventListener("click", () => abrirDetallePago(btn.dataset.id));
@@ -154,12 +158,51 @@ function initRegistrarPago() {
     .getElementById("btn-registrar-pago")
     .addEventListener("click", () => {
       document.getElementById("form-registrar-pago").reset();
-      // Poner la fecha de hoy por defecto
+      document.getElementById("alumno-preview").innerHTML = "";
+      // Fecha de hoy por defecto
       document.getElementById("p-fecha").value = new Date()
         .toISOString()
         .slice(0, 10);
+      // Prefijo R. en referencia
+      document.getElementById("p-referencia").value = "R.";
+      // Factura en No por defecto
+      document.getElementById("p-factura").value = "No";
       openModal("modal-registrar-pago");
     });
+
+  // Preview de alumno con debounce
+  let debounceTimer = null;
+  const inputMatricula = document.getElementById("p-matricula");
+  const previewEl = document.getElementById("alumno-preview");
+
+  inputMatricula.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    const val = inputMatricula.value.trim();
+
+    if (!val) {
+      previewEl.innerHTML = "";
+      return;
+    }
+
+    previewEl.innerHTML = `<span class="alumno-preview--loading"><i class="bi bi-hourglass-split"></i> Buscando...</span>`;
+
+    debounceTimer = setTimeout(async () => {
+      try {
+        const alumno = await getAlumnoByMatricula(val);
+        previewEl.innerHTML = `
+          <span class="alumno-preview--found">
+            <i class="bi bi-person-check-fill"></i>
+            ${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}
+          </span>`;
+      } catch {
+        previewEl.innerHTML = `
+          <span class="alumno-preview--not-found">
+            <i class="bi bi-person-x-fill"></i>
+            Alumno no encontrado con esa matrícula
+          </span>`;
+      }
+    }, 500);
+  });
 
   document
     .getElementById("form-registrar-pago")
@@ -180,8 +223,8 @@ function initRegistrarPago() {
           metodoPago: document.getElementById("p-metodo").value,
           concepto: document.getElementById("p-concepto").value,
           referencia:
-            document.getElementById("p-referencia").value || undefined,
-          factura: document.getElementById("p-factura").value || undefined,
+            document.getElementById("p-referencia").value.trim() || undefined,
+          factura: document.getElementById("p-factura").value,
         };
 
         await createPago(data);

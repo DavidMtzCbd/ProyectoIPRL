@@ -7,7 +7,14 @@ export function formatMoney(value) {
 
 export function formatDate(value) {
   if (!value) return "-";
-  return new Date(value).toLocaleDateString("es-MX");
+  // Extraemos solo la parte de fecha (YYYY-MM-DD) y la construimos
+  // como fecha LOCAL para evitar el desfase de zona horaria UTC vs local
+  const dateStr =
+    typeof value === "string"
+      ? value.slice(0, 10)
+      : new Date(value).toISOString().slice(0, 10);
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("es-MX");
 }
 
 export function showAlert(message, type = "success") {
