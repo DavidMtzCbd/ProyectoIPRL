@@ -57,27 +57,9 @@ exports.getAdminDashboard = async (req, res) => {
 
     const alumnos = await Alumno.find();
 
-    let totalAlumnosConAdeudo = 0;
-
-    for (const alumno of alumnos) {
-      const pagos = await Pago.find({ alumnoID: alumno._id });
-      const semestres = await Semestre.find({ alumnoID: alumno._id });
-
-      const totalPagos = pagos.reduce((acc, pago) => acc + pago.monto, 0);
-
-      const totalCostos = semestres.reduce(
-        (acc, semestre) =>
-          acc +
-          semestre.inscripcion +
-          semestre.reinscripcion +
-          semestre.colegiaturaMensual * semestre.mensualidades.length,
-        0,
-      );
-
-      if (totalCostos - totalPagos > 0) {
-        totalAlumnosConAdeudo++;
-      }
-    }
+    const totalAlumnosConAdeudo = await Alumno.countDocuments({
+      estatus: "Adeudo",
+    });
 
     //Tabla con el registro de los pagos
     const pagos = await Pago.find()

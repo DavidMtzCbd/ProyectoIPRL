@@ -22,6 +22,24 @@ exports.getAlumnos = async (req, res) => {
   }
 };
 
+//Controlador que busca un alumno por su número de matrícula
+exports.getAlumnoByMatricula = async (req, res) => {
+  try {
+    const alumno = await Alumno.findOne({
+      matricula: Number(req.params.matricula),
+    });
+    if (!alumno) {
+      return res
+        .status(404)
+        .json({ message: "Alumno no encontrado con esa matrícula" });
+    }
+    res.json(alumno);
+  } catch (error) {
+    logger.error("Error al buscar alumno por matrícula", error);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
 //Controlador que crea un nuevo alumno a partir de los datos enviados en el cuerpo de la solicitud.
 exports.createAlumno = async (req, res) => {
   try {
