@@ -19,7 +19,10 @@ exports.iniciarSesion = async (req, res) => {
   }
 
   // Verificar que la contraseña sea correcta
-  const contrasenaValida = await bcryptjs.compare(contrasena, usuarioDB.contrasena);
+  const contrasenaValida = await bcryptjs.compare(
+    contrasena,
+    usuarioDB.contrasena,
+  );
   if (!contrasenaValida) {
     return res.status(400).json({ mensaje: "Contraseña incorrecta" });
   }
@@ -30,7 +33,7 @@ exports.iniciarSesion = async (req, res) => {
       rol: usuarioDB.rol,
     },
     process.env.SECRETOKEYJWT,
-    { expiresIn: "8h" },
+    { expiresIn: "1h" },
   );
   res.json({ token, rol: usuarioDB.rol });
 };
@@ -44,11 +47,15 @@ exports.registrarUsuario = async (req, res) => {
     const nuevoUsuario = await Usuario.create({
       usuario,
       contrasena: contrasenaHashed,
-      rol
+      rol,
     });
 
-    res.status(201).json({ mensaje: "Usuario creado", usuario: nuevoUsuario.usuario });
+    res
+      .status(201)
+      .json({ mensaje: "Usuario creado", usuario: nuevoUsuario.usuario });
   } catch (error) {
-    res.status(400).json({ mensaje: "Error al registrar", error: error.message });
+    res
+      .status(400)
+      .json({ mensaje: "Error al registrar", error: error.message });
   }
 };

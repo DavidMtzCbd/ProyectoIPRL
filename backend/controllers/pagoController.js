@@ -6,9 +6,23 @@ const { logger } = require("../config/logger");
 
 exports.crearPago = async (req, res) => {
   try {
-    const pago = await Pago.create(req.body);
+    // ── Generar número de movimiento (secuencial global) ──────────────────────
+    const totalPagos = await Pago.countDocuments();
+    const movimiento = totalPagos + 1;
 
-    //Función que actualiza el totalPagado del semestre
+    // ── Generar folio de factura (solo si requiere factura) ────────────────────
+    let folioFactura = null;
+    if (req.body.factura === "Sí") {
+      const totalFacturas = await Pago.countDocuments({
+        folioFactura: { $ne: null },
+      });
+      const numFolio = totalFacturas + 1;
+      folioFactura = `F-${String(numFolio).padStart(4, "0")}`;
+    }
+
+    const pago = await Pago.create({ ...req.body, movimiento, folioFactura });
+
+    // Actualiza el totalPagado del semestre si aplica
     if (pago.semestreID) {
       await Semestre.findByIdAndUpdate(pago.semestreID, {
         $inc: { totalPagado: pago.monto },
@@ -22,8 +36,7 @@ exports.crearPago = async (req, res) => {
   }
 };
 
-//Controlador que obtiene el listado de pagos por alumno
-//Controlador que obtiene todos los pagos registrados
+// Controlador que obtiene todos los pagos registrados
 exports.obtenerTodosLosPagos = async (req, res) => {
   try {
     const pagos = await Pago.find()
@@ -31,7 +44,7 @@ exports.obtenerTodosLosPagos = async (req, res) => {
         "alumnoID",
         "nombre apellidoPaterno apellidoMaterno matricula correo",
       )
-      .sort({ fechaPago: -1 });
+      .sort({ movimiento: -1 }); // ordenar por movimiento descendente
     res.json(pagos);
   } catch (error) {
     logger.error("Error al obtener todos los pagos", error);

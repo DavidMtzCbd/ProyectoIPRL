@@ -7,30 +7,31 @@
       </button>
     </div>
 
-    <!-- Buscador por matrícula -->
-    <form
-      id="pagos-filter-form"
-      class="inline-form"
-      style="margin-bottom: 16px"
-    >
-      <input
-        id="alumno-id"
-        type="text"
-        placeholder="Filtrar por matrícula del alumno"
-      />
-      <button type="submit">Buscar</button>
-      <button
-        type="button"
-        id="btn-limpiar-filtro"
-        class="btn-sm btn-secondary"
-      >
-        Limpiar
+    <!-- Buscador por nombre o matrícula -->
+    <form id="pagos-filter-form" class="search-bar-form">
+      <div class="search-input-wrapper">
+        <i class="bi bi-search search-icon"></i>
+        <input
+          id="alumno-id"
+          type="text"
+          class="search-input"
+          placeholder="Buscar por nombre o matrícula del alumno…"
+          autocomplete="off"
+        />
+      </div>
+      <button type="submit" class="btn-sm btn-action">
+        <i class="bi bi-search"></i> Buscar
+      </button>
+      <button type="button" id="btn-limpiar-filtro" class="btn-sm btn-clear">
+        <i class="bi bi-x-circle-fill"></i> Limpiar
       </button>
     </form>
 
     <table>
       <thead>
         <tr>
+          <th>Mov.</th>
+          <th>Folio Factura</th>
           <th>Fecha</th>
           <th>Matrícula</th>
           <th>Nombre</th>
@@ -44,6 +45,7 @@
       </thead>
       <tbody id="pagos-table"></tbody>
     </table>
+    <div id="pagos-pagination"></div>
   </article>
 </section>
 
@@ -57,6 +59,23 @@
     <form id="form-registrar-pago">
       <div class="modal-body">
         <div class="form-grid">
+          <!-- Buscador por nombre (autocomplete) -->
+          <div class="form-group full-width autocomplete-group">
+            <label for="p-buscar-nombre">Buscar alumno por nombre</label>
+            <div class="autocomplete-wrapper">
+              <i class="bi bi-person-search autocomplete-icon"></i>
+              <input
+                id="p-buscar-nombre"
+                type="text"
+                class="autocomplete-input"
+                placeholder="Escribe el nombre del alumno…"
+                autocomplete="off"
+              />
+            </div>
+            <ul id="p-sugerencias" class="autocomplete-list" hidden></ul>
+          </div>
+
+          <!-- Matrícula (se autocompleta al seleccionar) -->
           <div class="form-group full-width">
             <label for="p-matricula">Matrícula del alumno</label>
             <input
@@ -86,7 +105,7 @@
             <label for="p-metodo">Método de pago</label>
             <select id="p-metodo" required>
               <option value="">-- Seleccionar --</option>
-              <option value="Deposito en Cuenta">Depósito en cuenta</option>
+              <option value="Deposito en efectivo">Depósito en efectivo</option>
               <option value="Transferencia">Transferencia</option>
             </select>
           </div>
@@ -103,6 +122,14 @@
               <option value="Maestría Colegiatura">Maestría Colegiatura</option>
               <option value="Titulación">Titulación</option>
               <option value="Certificados">Certificados</option>
+              <option value="Recuperación de cartera">
+                Recuperación de cartera
+              </option>
+              <option value="Hergonomia colegiatura">
+                Hergonomia colegiatura
+              </option>
+              <option value="Diplomado">Diplomado</option>
+              <option value="Curso">Curso</option>
             </select>
           </div>
           <div class="form-group">

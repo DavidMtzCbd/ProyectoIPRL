@@ -46,3 +46,119 @@ export function fillTable(tableBodyId, rowsHtml) {
       rowsHtml || "<tr><td colspan='10'>Sin datos disponibles</td></tr>";
   }
 }
+
+// ── Paginador reutilizable ────────────────────────────────────────────────────
+
+/**
+ * Paginator
+ * @param {object} opts
+ *   controlsId   – id del div donde se renderizarán los controles
+ *   renderPage   – callback(items) que recibe el slice de datos a mostrar
+ *   rowOptions   – [10, 15, 20] filas por página disponibles
+ */
+export class Paginator {
+  constructor({ controlsId, renderPage, rowOptions = [10, 15, 20] }) {
+    this._controlsId = controlsId;
+    this._renderPage = renderPage;
+    this._rowOptions = rowOptions;
+    this._data = [];
+    this._page = 1;
+    this._perPage = rowOptions[0];
+  }
+
+  /** Carga (o actualiza) los datos y vuelve a la página 1 */
+  setData(data) {
+    this._data = data;
+    this._page = 1;
+    // Reconstruir controles si el contenedor existe pero está vacío
+    // (ocurre cuando se navega entre vistas y el HTML se recarga)
+    const container = document.getElementById(this._controlsId);
+    if (container && !container.hasChildNodes()) {
+      this._buildControls();
+    }
+    this._update();
+  }
+
+  /** Construye los controles de paginación una sola vez */
+  _buildControls() {
+    const container = document.getElementById(this._controlsId);
+    if (!container) return;
+
+    const opts = this._rowOptions
+      .map((n) => `<option value="${n}">${n}</option>`)
+      .join("");
+
+    container.innerHTML = `
+      <div class="pagination-bar">
+        <div class="pagination-left">
+          <span class="pagination-label">Filas por página:</span>
+          <select class="pagination-select" id="${this._controlsId}-per-page">
+            ${opts}
+          </select>
+          <span class="pagination-info" id="${this._controlsId}-info"></span>
+        </div>
+        <div class="pagination-right">
+          <button class="pagination-btn" id="${this._controlsId}-prev">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <span class="pagination-pages" id="${this._controlsId}-pages"></span>
+          <button class="pagination-btn" id="${this._controlsId}-next">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>`;
+
+    document
+      .getElementById(`${this._controlsId}-per-page`)
+      .addEventListener("change", (e) => {
+        this._perPage = Number(e.target.value);
+        this._page = 1;
+        this._update();
+      });
+
+    document
+      .getElementById(`${this._controlsId}-prev`)
+      .addEventListener("click", () => {
+        if (this._page > 1) {
+          this._page--;
+          this._update();
+        }
+      });
+
+    document
+      .getElementById(`${this._controlsId}-next`)
+      .addEventListener("click", () => {
+        if (this._page < this._totalPages()) {
+          this._page++;
+          this._update();
+        }
+      });
+  }
+
+  _totalPages() {
+    return Math.max(1, Math.ceil(this._data.length / this._perPage));
+  }
+
+  _update() {
+    const total = this._data.length;
+    const totalPages = this._totalPages();
+    this._page = Math.min(this._page, totalPages);
+
+    const start = (this._page - 1) * this._perPage;
+    const slice = this._data.slice(start, start + this._perPage);
+
+    this._renderPage(slice);
+
+    // Actualizar controles
+    const infoEl = document.getElementById(`${this._controlsId}-info`);
+    const pagesEl = document.getElementById(`${this._controlsId}-pages`);
+    const prevBtn = document.getElementById(`${this._controlsId}-prev`);
+    const nextBtn = document.getElementById(`${this._controlsId}-next`);
+
+    if (infoEl)
+      infoEl.textContent = `${start + 1}–${Math.min(start + this._perPage, total)} de ${total}`;
+    if (pagesEl) pagesEl.textContent = `Página ${this._page} / ${totalPages}`;
+    if (prevBtn) prevBtn.disabled = this._page === 1;
+    if (nextBtn) nextBtn.disabled = this._page === totalPages;
+  }
+}

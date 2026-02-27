@@ -6,7 +6,13 @@ import {
   updateAlumno,
 } from "../api.js";
 
-import { fillTable, showAlert, formatDate, formatMoney } from "../ui.js";
+import {
+  fillTable,
+  showAlert,
+  formatDate,
+  formatMoney,
+  Paginator,
+} from "../ui.js";
 
 // ── Helpers de modal ──────────────────────────────────────────────────────────
 
@@ -34,6 +40,12 @@ function bindCloseButtons() {
 
 let todosLosAlumnos = [];
 
+// Paginador de la tabla de alumnos
+const paginadorAlumnos = new Paginator({
+  controlsId: "alumnos-pagination",
+  renderPage: renderTablaAlumnos,
+});
+
 async function cargarAlumnos() {
   try {
     const data = await getAlumnos();
@@ -43,7 +55,7 @@ async function cargarAlumnos() {
       const nombreB = `${b.apellidoPaterno} ${b.apellidoMaterno} ${b.nombre}`;
       return nombreA.localeCompare(nombreB, "es", { sensitivity: "base" });
     });
-    renderTablaAlumnos(todosLosAlumnos);
+    paginadorAlumnos.setData(todosLosAlumnos);
   } catch (error) {
     showAlert("Error al cargar alumnos: " + error.message, "error");
   }
@@ -151,7 +163,7 @@ function initFiltros() {
       return coincideTexto && coincideEstatus;
     });
 
-    renderTablaAlumnos(filtrados);
+    paginadorAlumnos.setData(filtrados);
   }
 
   inputTexto.addEventListener("input", aplicarFiltros);
@@ -160,7 +172,7 @@ function initFiltros() {
   btnLimpiar.addEventListener("click", () => {
     inputTexto.value = "";
     selectEstatus.value = "";
-    renderTablaAlumnos(todosLosAlumnos);
+    paginadorAlumnos.setData(todosLosAlumnos);
   });
 }
 
