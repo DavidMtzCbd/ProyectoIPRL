@@ -162,3 +162,30 @@ export class Paginator {
     if (nextBtn) nextBtn.disabled = this._page === totalPages;
   }
 }
+
+// ── Cargador de modales como componentes ──────────────────────────────────────
+
+/**
+ * Carga uno o varios archivos HTML de componente (modales) e inyecta
+ * su contenido al final del <body>. Si el modal ya existe en el DOM
+ * (por una carga previa) lo omite para evitar duplicados.
+ *
+ * @param {string[]} paths - Rutas relativas a los archivos HTML del componente
+ */
+export async function loadModals(paths = []) {
+  await Promise.all(
+    paths.map(async (path) => {
+      const modalId = path.split("/").pop().replace(".html", "");
+      if (document.getElementById(modalId)) return; // ya cargado
+
+      try {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error(`No se pudo cargar: ${path}`);
+        const html = await res.text();
+        document.body.insertAdjacentHTML("beforeend", html);
+      } catch (err) {
+        console.warn("[loadModals]", err.message);
+      }
+    }),
+  );
+}

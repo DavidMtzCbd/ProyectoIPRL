@@ -4,6 +4,7 @@ import {
   createPago,
   getAlumnoByMatricula,
   getAlumnos,
+  getSemestres,
 } from "../api.js";
 
 import {
@@ -12,6 +13,7 @@ import {
   fillTable,
   showAlert,
   Paginator,
+  loadModals,
 } from "../ui.js";
 
 // ── Helpers de modal ──────────────────────────────────────────────────────────
@@ -254,19 +256,57 @@ function initRegistrarPago() {
     if (e.key === "Escape") listaSugerir.hidden = true;
   });
 
+  // ── Mostrar preview enriquecido ──────────────────────────────────────────────
+  async function mostrarPreviewAlumno(alumno) {
+    // Auto-factura: si el alumno tiene RFC registrado → Sí
+    const tieneRFC = alumno.rfc && alumno.rfc.trim() !== "";
+    document.getElementById("p-factura").value = tieneRFC ? "Sí" : "No";
+
+    // Obtener semestre más reciente para mostrar precios
+    let semInfo = "";
+    try {
+      const semestres = await getSemestres(alumno._id);
+      if (semestres.length) {
+        const sem = semestres.sort((a, b) => b.numSemestre - a.numSemestre)[0];
+        const beca = sem.descuentoPorcentaje ?? 0;
+        const mul = 1 - beca / 100;
+        const fmt = (v) =>
+          new Intl.NumberFormat("es-MX", {
+            style: "currency",
+            currency: "MXN",
+          }).format(v);
+        const becaBadge =
+          beca > 0
+            ? `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde68a;border-radius:99px;padding:1px 8px;font-size:.72rem;font-weight:700;">Beca ${beca}%</span>`
+            : "";
+        semInfo = `
+          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;">
+            ${becaBadge}
+            <span>Insc. <strong>${fmt(sem.inscripcion * mul)}</strong></span>
+            <span>Reinsc. <strong>${fmt(sem.reinscripcion * mul)}</strong></span>
+            <span>Colegiatura <strong>${fmt(sem.colegiaturaMensual * mul)}</strong></span>
+          </div>`;
+      }
+    } catch {
+      /* sin semestres */
+    }
+
+    const nombreCompleto = `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`;
+    previewEl.innerHTML = `
+      <span class="alumno-preview--found" style="flex-direction:column;align-items:flex-start;gap:2px;">
+        <span><i class="bi bi-person-check-fill"></i> ${nombreCompleto}</span>
+        ${semInfo}
+        ${tieneRFC ? `<span style="font-size:.75rem;color:#4ade80;"><i class="bi bi-receipt-cutoff"></i> Datos fiscales registrados — factura auto-seleccionada</span>` : ""}
+      </span>`;
+  }
+
   // ── Seleccionar alumno del dropdown ────────────────────────────────────────
   function seleccionarAlumno(alumno) {
     const nombreCompleto = `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`;
     inputNombre.value = nombreCompleto;
     listaSugerir.hidden = true;
-
-    // Autocompletar matrícula y mostrar preview
     inputMatricula.value = alumno.matricula;
-    previewEl.innerHTML = `
-      <span class="alumno-preview--found">
-        <i class="bi bi-person-check-fill"></i>
-        ${nombreCompleto}
-      </span>`;
+    mostrarPreviewAlumno(alumno);
   }
 
   // ── Preview al escribir matrícula manualmente (debounce) ───────────────────
@@ -284,11 +324,7 @@ function initRegistrarPago() {
     debounceTimer = setTimeout(async () => {
       try {
         const alumno = await getAlumnoByMatricula(val);
-        previewEl.innerHTML = `
-          <span class="alumno-preview--found">
-            <i class="bi bi-person-check-fill"></i>
-            ${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}
-          </span>`;
+        mostrarPreviewAlumno(alumno);
       } catch {
         previewEl.innerHTML = `
           <span class="alumno-preview--not-found">
@@ -331,6 +367,10 @@ function initRegistrarPago() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 export async function initPagos() {
+  await loadModals([
+    "components/modals/pagos/modal-registrar-pago.html",
+    "components/modals/pagos/modal-detalle-pago.html",
+  ]);
   bindCloseButtons();
   initBuscador();
   initRegistrarPago();

@@ -4,6 +4,9 @@ import {
   getAlumnoById,
   getAlumnoPagos,
   updateAlumno,
+  getSemestres,
+  createSemestre,
+  updateSemestre,
 } from "../api.js";
 
 import {
@@ -12,7 +15,10 @@ import {
   formatDate,
   formatMoney,
   Paginator,
+  loadModals,
 } from "../ui.js";
+
+import { appState } from "../state.js";
 
 // ── Helpers de modal ──────────────────────────────────────────────────────────
 
@@ -175,17 +181,83 @@ function initFiltros() {
     paginadorAlumnos.setData(todosLosAlumnos);
   });
 }
+function fmt(v) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+  }).format(Number(v ?? 0));
+}
 
 // ── Detalle de alumno ─────────────────────────────────────────────────────────
 
+let alumnoDetalleId = null;
+
+function renderSemestresEnDetalle(semestres) {
+  const container = document.getElementById("semestres-lista");
+  if (!container) return;
+
+  if (!semestres.length) {
+    container.innerHTML = `<p style="color:var(--muted);font-style:italic;font-size:.85rem;">Sin semestres registrados.</p>`;
+    return;
+  }
+
+  container.innerHTML = semestres
+    .map((s) => {
+      const beca =
+        s.descuentoPorcentaje > 0
+          ? `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde68a;border-radius:99px;padding:1px 8px;font-size:.75rem;font-weight:700;">Beca ${s.descuentoPorcentaje}%</span>`
+          : `<span style="color:#94a3b8;font-size:.78rem;">Sin beca</span>`;
+
+      return `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;">
+        <strong style="font-size:.88rem;">Sem. ${s.numSemestre} — ${s.periodo}</strong>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:2px;">
+          Inscripción: ${fmt(s.inscripcion)}
+          · Reinscripción: ${fmt(s.reinscripcion)}
+          · Colegiatura: ${fmt(s.colegiaturaMensual)}
+        </div>
+      </div>
+      ${beca}
+      <button class="btn-sm btn-primary btn-editar-semestre"
+        data-sid="${s._id}"
+        data-num="${s.numSemestre}"
+        data-periodo="${s.periodo}"
+        data-inscripcion="${s.inscripcion ?? 0}"
+        data-reinscripcion="${s.reinscripcion ?? 0}"
+        data-colegiatura="${s.colegiaturaMensual ?? 0}"
+        data-beca="${s.descuentoPorcentaje ?? 0}"
+        style="white-space:nowrap;">
+        <i class="bi bi-pencil-fill"></i> Editar
+      </button>
+    </div>`;
+    })
+    .join("");
+
+  container.querySelectorAll(".btn-editar-semestre").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      abrirModalSemestre({
+        _id: btn.dataset.sid,
+        numSemestre: Number(btn.dataset.num),
+        periodo: btn.dataset.periodo,
+        inscripcion: Number(btn.dataset.inscripcion),
+        reinscripcion: Number(btn.dataset.reinscripcion),
+        colegiaturaMensual: Number(btn.dataset.colegiatura),
+        descuentoPorcentaje: Number(btn.dataset.beca),
+      });
+    });
+  });
+}
+
 async function abrirDetalleAlumno(id) {
+  alumnoDetalleId = id;
   try {
-    const [alumno, pagos] = await Promise.all([
+    const [alumno, pagos, semestres] = await Promise.all([
       getAlumnoById(id),
       getAlumnoPagos(id),
+      getSemestres(id).catch(() => []),
     ]);
 
-    // Información del alumno
     const grid = document.getElementById("alumno-info-grid");
     grid.innerHTML = `
       <div class="detail-item"><span>Nombre completo</span><span>${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}</span></div>
@@ -195,6 +267,16 @@ async function abrirDetalleAlumno(id) {
       <div class="detail-item"><span>Estatus</span><span>${badgeEstatus(alumno.estatus)}</span></div>
       <div class="detail-item"><span>Saldo actual</span><span>${formatMoney(alumno.saldoActual)}</span></div>
     `;
+
+    // Semestres
+    const semContainer = document.getElementById("semestres-lista");
+    if (semContainer) renderSemestresEnDetalle(semestres);
+
+    // Botón agregar semestre
+    const btnNuevoSem = document.getElementById("btn-nuevo-semestre");
+    if (btnNuevoSem) {
+      btnNuevoSem.onclick = () => abrirModalSemestre(null);
+    }
 
     // Historial de pagos
     const rowsPagos = pagos.length
@@ -213,9 +295,126 @@ async function abrirDetalleAlumno(id) {
 
     fillTable("alumno-pagos-tabla", rowsPagos);
     openModal("modal-detalle-alumno");
+
+    // Botón Ver Estado de Cuenta
+    const btnEC = document.getElementById("btn-estado-cuenta");
+    if (btnEC) {
+      btnEC.onclick = () => {
+        appState.alumnoActivo = id;
+        closeModal("modal-detalle-alumno");
+        // Disparar la navegación al Estado de Cuenta
+        document
+          .querySelector(".nav-btn[data-view='estadoCuenta']")
+          ?.dispatchEvent(new MouseEvent("click"));
+        // Fallback: el evento loadView también se dispara via el import en main.js
+        document.dispatchEvent(
+          new CustomEvent("navigate", { detail: "estadoCuenta" }),
+        );
+      };
+    }
   } catch (error) {
     showAlert("Error al cargar detalle: " + error.message, "error");
   }
+}
+
+// ── Modal de semestre ─────────────────────────────────────────────────────────
+
+function abrirModalSemestre(semestre = null) {
+  const form = document.getElementById("form-semestre-alumno");
+  const title = document.getElementById("semestre-modal-title");
+  const submitBtn = document.getElementById("semestre-submit-btn");
+  if (!form) return;
+
+  form.reset();
+  document.getElementById("semestre-preview").style.display = "none";
+
+  if (semestre) {
+    // Modo edición
+    title.textContent = `Editar Semestre ${semestre.numSemestre} — ${semestre.periodo}`;
+    submitBtn.innerHTML = '<i class="bi bi-floppy-fill"></i> Guardar cambios';
+    document.getElementById("s-id").value = semestre._id;
+    document.getElementById("s-num").value = semestre.numSemestre;
+    document.getElementById("s-periodo").value = semestre.periodo;
+    document.getElementById("s-inscripcion").value = semestre.inscripcion;
+    document.getElementById("s-reinscripcion").value = semestre.reinscripcion;
+    document.getElementById("s-colegiatura").value =
+      semestre.colegiaturaMensual;
+    document.getElementById("s-beca").value = semestre.descuentoPorcentaje;
+    actualizarPreviewBeca();
+  } else {
+    // Modo creación
+    title.textContent = "Registrar nuevo semestre";
+    submitBtn.innerHTML = '<i class="bi bi-floppy-fill"></i> Guardar semestre';
+    document.getElementById("s-id").value = "";
+  }
+
+  document.getElementById("s-alumno-id").value = alumnoDetalleId;
+  openModal("modal-semestre-alumno");
+}
+
+function actualizarPreviewBeca() {
+  const insc = Number(document.getElementById("s-inscripcion").value) || 0;
+  const reinsc = Number(document.getElementById("s-reinscripcion").value) || 0;
+  const cole = Number(document.getElementById("s-colegiatura").value) || 0;
+  const beca = Number(document.getElementById("s-beca").value) || 0;
+  const preview = document.getElementById("semestre-preview");
+
+  if (beca > 0 && (insc || reinsc || cole)) {
+    const mul = 1 - beca / 100;
+    document.getElementById("prev-insc").textContent = fmt(insc * mul);
+    document.getElementById("prev-reinsc").textContent = fmt(reinsc * mul);
+    document.getElementById("prev-cole").textContent = fmt(cole * mul);
+    preview.style.display = "block";
+  } else {
+    preview.style.display = "none";
+  }
+}
+
+function initSemestre() {
+  // Preview dinámico al cambiar valores
+  ["s-inscripcion", "s-reinscripcion", "s-colegiatura", "s-beca"].forEach(
+    (id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", actualizarPreviewBeca);
+    },
+  );
+
+  // Submit del formulario
+  document
+    .getElementById("form-semestre-alumno")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const sId = document.getElementById("s-id").value;
+      const alumnoID = document.getElementById("s-alumno-id").value;
+
+      const data = {
+        alumnoID,
+        numSemestre: Number(document.getElementById("s-num").value),
+        periodo: document.getElementById("s-periodo").value.trim(),
+        inscripcion: Number(document.getElementById("s-inscripcion").value),
+        reinscripcion: Number(document.getElementById("s-reinscripcion").value),
+        colegiaturaMensual: Number(
+          document.getElementById("s-colegiatura").value,
+        ),
+        descuentoPorcentaje: Number(document.getElementById("s-beca").value),
+      };
+
+      try {
+        if (sId) {
+          await updateSemestre(sId, data);
+          showAlert("Semestre actualizado correctamente ✔", "success");
+        } else {
+          await createSemestre(data);
+          showAlert("Semestre registrado correctamente ✔", "success");
+        }
+        closeModal("modal-semestre-alumno");
+        // Refrescar la sección de semestres en el detalle abierto
+        const semestres = await getSemestres(alumnoID);
+        renderSemestresEnDetalle(semestres);
+      } catch (error) {
+        showAlert("Error: " + error.message, "error");
+      }
+    });
 }
 
 // ── Agregar alumno ────────────────────────────────────────────────────────────
@@ -255,9 +454,16 @@ function initAgregarAlumno() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 export async function initAlumnos() {
+  await loadModals([
+    "components/modals/alumnos/modal-agregar-alumno.html",
+    "components/modals/alumnos/modal-editar-alumno.html",
+    "components/modals/alumnos/modal-detalle-alumno.html",
+    "components/modals/alumnos/modal-semestre-alumno.html",
+  ]);
   bindCloseButtons();
   initAgregarAlumno();
   initEditarAlumno();
+  initSemestre();
   await cargarAlumnos();
   initFiltros();
 }

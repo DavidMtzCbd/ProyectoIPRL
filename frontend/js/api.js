@@ -33,6 +33,10 @@ export function login(credentials) {
   });
 }
 
+export function getMe() {
+  return request("/auth/me");
+}
+
 // ── Alumnos ──────────────────────────────────────────────────────────────────
 
 export function getAlumnos() {
@@ -94,4 +98,19 @@ export function getCursos() {
 
 export function getDashboardAdmin() {
   return request("/dashboard/admin");
+}
+
+export function getSemestres(alumnoId) {
+  return request(`/semestres/alumno/${alumnoId}`);
+}
+
+export function createSemestre(data) {
+  return request("/semestres", { method: "POST", body: JSON.stringify(data) });
+}
+
+export function updateSemestre(id, data) {
+  return request(`/semestres/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
 }

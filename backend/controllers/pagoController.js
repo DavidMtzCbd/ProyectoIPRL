@@ -1,8 +1,8 @@
 const Pago = require("../models/Pago");
 const Semestre = require("../models/Semestre");
 const Alumno = require("../models/Alumno");
-
 const { logger } = require("../config/logger");
+const { recalcularAlumno } = require("../helpers/recalcularAlumno");
 
 exports.crearPago = async (req, res) => {
   try {
@@ -29,6 +29,9 @@ exports.crearPago = async (req, res) => {
       });
     }
 
+    // ── Recalcular saldoActual y estatus del alumno ────────────────────────────
+    await recalcularAlumno(pago.alumnoID);
+
     res.status(201).json(pago);
   } catch (error) {
     logger.error("Error al registrar nuevo pago", error);
@@ -44,7 +47,7 @@ exports.obtenerTodosLosPagos = async (req, res) => {
         "alumnoID",
         "nombre apellidoPaterno apellidoMaterno matricula correo",
       )
-      .sort({ movimiento: -1 }); // ordenar por movimiento descendente
+      .sort({ movimiento: -1 });
     res.json(pagos);
   } catch (error) {
     logger.error("Error al obtener todos los pagos", error);
@@ -52,16 +55,13 @@ exports.obtenerTodosLosPagos = async (req, res) => {
   }
 };
 
-//Controlador que obtiene el detalle de un pago por su ID
 exports.obtenerPagoPorId = async (req, res) => {
   try {
     const pago = await Pago.findById(req.params.id).populate(
       "alumnoID",
       "nombre apellidoPaterno apellidoMaterno matricula correo",
     );
-    if (!pago) {
-      return res.status(404).json({ mensaje: "Pago no encontrado" });
-    }
+    if (!pago) return res.status(404).json({ mensaje: "Pago no encontrado" });
     res.json(pago);
   } catch (error) {
     logger.error("Error al obtener el detalle del pago", error);
@@ -69,26 +69,20 @@ exports.obtenerPagoPorId = async (req, res) => {
   }
 };
 
-//Controlador que obtiene el listado de pagos por alumno
 exports.obtenerPagosAlumno = async (req, res) => {
   try {
-    // 1. Buscamos al alumno usando la matrícula que viene en los parámetros
     const alumno = await Alumno.findOne({ matricula: req.params.alumnoID });
-
     if (!alumno) {
       return res
         .status(404)
         .json({ mensaje: "Alumno no encontrado con esa matrícula" });
     }
-
-    // 2. Ahora buscamos los pagos usando el ID real del alumno encontrado
     const pagos = await Pago.find({ alumnoID: alumno._id })
       .populate(
         "alumnoID",
         "nombre apellidoPaterno apellidoMaterno matricula correo",
       )
       .sort({ fechaPago: -1 });
-
     res.json(pagos);
   } catch (error) {
     logger.error("Error al obtener el historial de pagos", error);
@@ -96,7 +90,6 @@ exports.obtenerPagosAlumno = async (req, res) => {
   }
 };
 
-//Controlador que obtiene los pagos de un alumno por su ObjectId (_id)
 exports.obtenerPagosAlumnoPorId = async (req, res) => {
   try {
     const pagos = await Pago.find({ alumnoID: req.params.id }).sort({

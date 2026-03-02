@@ -1,0 +1,597 @@
+/* ── Portal Alumno – Estilos ───────────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #263347;
+  --border: #334155;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --success: #22c55e;
+  --success-bg: #14532d;
+  --danger: #ef4444;
+  --danger-bg: #7f1d1d;
+  --warning: #f59e0b;
+  --warning-bg: #78350f;
+  --gold: #fbbf24;
+  --font: "Inter", system-ui, sans-serif;
+  --radius: 14px;
+  --radius-sm: 9px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+
+.portal-wrapper {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+.portal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.portal-logo {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.portal-title-group h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.portal-title-group p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: var(--font);
+}
+
+.btn-logout:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.07);
+}
+
+/* ── Tarjeta de perfil ────────────────────────────────────────────────────── */
+
+.profile-card {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 60%, #1e293b 100%);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-card::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-card::after {
+  content: "";
+  position: absolute;
+  bottom: -60px;
+  right: 60px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.profile-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.profile-sub {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 20px;
+}
+
+.profile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  backdrop-filter: blur(4px);
+}
+
+.chip--success {
+  background: rgba(34, 197, 94, 0.2);
+}
+.chip--warning {
+  background: rgba(245, 158, 11, 0.2);
+}
+.chip--danger {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* ── Grid de tarjetas de resumen ─────────────────────────────────────────── */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-card__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summary-card__value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.summary-card__value--green {
+  color: var(--success);
+}
+.summary-card__value--red {
+  color: var(--danger);
+}
+.summary-card__value--gold {
+  color: var(--gold);
+}
+
+/* ── Sección genérica ─────────────────────────────────────────────────────── */
+
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.section-title i {
+  color: var(--primary);
+  font-size: 1rem;
+}
+.section-body {
+  padding: 20px 22px;
+}
+
+/* ── Tabla de colegiatura ─────────────────────────────────────────────────── */
+
+.colegiatura-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.colegiatura-table th,
+.colegiatura-table td {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.colegiatura-table th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.colegiatura-table tr:last-child td {
+  border-bottom: none;
+}
+
+.colegiatura-table .price-base {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.colegiatura-table .price-final {
+  color: var(--success);
+  font-weight: 700;
+}
+.colegiatura-table .beca-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--gold);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 99px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.no-data {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.88rem;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* ── Feed de pagos (historial) ────────────────────────────────────────────── */
+
+.pagos-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pago-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.pago-item:last-child {
+  border-bottom: none;
+}
+
+.pago-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.pago-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pago-concepto {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pago-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pago-monto {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--success);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pago-folio {
+  font-size: 0.72rem;
+  color: var(--gold);
+  display: block;
+  margin-top: 2px;
+  text-align: right;
+}
+
+/* ── Formulario de facturación ────────────────────────────────────────────── */
+
+.fact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.fact-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fact-group.full {
+  grid-column: 1 / -1;
+}
+
+.fact-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fact-group input,
+.fact-group select {
+  padding: 9px 12px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: var(--font);
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+
+.fact-group input:focus,
+.fact-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.fact-group input::placeholder {
+  color: #475569;
+}
+
+.fact-group select option {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.fact-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-fact-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 22px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition:
+    opacity 0.18s,
+    transform 0.1s;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+}
+
+.btn-fact-save:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ── Badge de estatus ─────────────────────────────────────────────────────── */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.status-badge--corriente {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+.status-badge--adeudo {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+.status-badge--convenio {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+/* ── Skeleton loader ──────────────────────────────────────────────────────── */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface2) 25%,
+    #2f405a 50%,
+    var(--surface2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+  color: transparent !important;
+  user-select: none;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Alerta flotante ──────────────────────────────────────────────────────── */
+
+.portal-alert {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: slideInRight 0.25s ease;
+}
+
+.portal-alert--success {
+  background: #16a34a;
+}
+.portal-alert--error {
+  background: #dc2626;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(60px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fact-grid {
+    grid-template-columns: 1fr;
+  }
+  .fact-group.full {
+    grid-column: 1;
+  }
+  .profile-name {
+    font-size: 1.2rem;
+  }
+  .portal-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

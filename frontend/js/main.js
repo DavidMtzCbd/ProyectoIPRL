@@ -6,12 +6,14 @@ import { showAlert, changeViewUI } from "./ui.js";
 import { initDashboard } from "./views/dashboardView.js";
 import { initAlumnos } from "./views/alumnosView.js";
 import { initPagos } from "./views/pagosView.js";
+import { initEstadoCuenta } from "./views/estadoCuentaView.js";
 
 //Esta funcion se encarga de inicializar lasvistas del proyecto, dependiendo de la vista que se le indique
 const VIEW_LOGIC = {
   dashboard: initDashboard,
   alumnos: initAlumnos,
   pagos: initPagos,
+  estadoCuenta: initEstadoCuenta,
 };
 
 async function loadView(viewName) {
@@ -57,6 +59,9 @@ async function bootstrap() {
   document.querySelectorAll(".nav-btn").forEach((button) => {
     button.addEventListener("click", () => loadView(button.dataset.view));
   });
+
+  // Navegación programática desde otras vistas (ej: Estado de Cuenta desde Alumnos)
+  document.addEventListener("navigate", (e) => loadView(e.detail));
 
   //Cargar la vista inicial
   if (appState.token) {

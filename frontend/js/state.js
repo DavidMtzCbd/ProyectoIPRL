@@ -7,6 +7,7 @@ export const appState = {
   token: localStorage.getItem("token") ?? "",
   usuario: localStorage.getItem("usuario") ?? "",
   currentView: "dashboard",
+  alumnoActivo: null,
 };
 
 export function setToken(token) {

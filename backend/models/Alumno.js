@@ -51,6 +51,16 @@ const alumnoSchema = new mongoose.Schema(
       enum: ["Al corriente", "Adeudo", "Convenio"],
       default: "Al corriente",
     },
+
+    // ── Datos de facturación (opcionales, los registra el alumno) ─────────
+    rfc: { type: String, trim: true, uppercase: true, default: null },
+    razonSocial: { type: String, trim: true, default: null },
+    usoCFDI: { type: String, trim: true, default: null },
+    regimenFiscal: { type: String, trim: true, default: null },
+    domicilioFiscal: { type: String, trim: true, default: null },
+
+    // ── Notas del administrador ───────────────────────────────────
+    notas: { type: String, default: "" },
   },
   { timestamps: true },
 );

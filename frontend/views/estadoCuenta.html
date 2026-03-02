@@ -1,0 +1,88 @@
+<!-- Vista: Estado de Cuenta del alumno -->
+<link rel="stylesheet" href="./styles/views/estadoCuenta.css" />
+
+<div class="ec-wrapper">
+  <!-- Botón regresar -->
+  <button class="ec-back-btn" id="ec-back">
+    <i class="bi bi-arrow-left"></i> Regresar a Alumnos
+  </button>
+
+  <!-- Header del alumno -->
+  <div class="ec-header" id="ec-header">
+    <div class="ec-header-left">
+      <h2 id="ec-nombre">Cargando…</h2>
+      <p id="ec-oferta">&nbsp;</p>
+      <div class="ec-header-chips" id="ec-chips"></div>
+    </div>
+    <div class="ec-header-right">
+      <div class="ec-prices-grid" id="ec-prices"></div>
+      <div id="ec-beca-badge"></div>
+      <div class="ec-saldo" id="ec-saldo"></div>
+    </div>
+  </div>
+
+  <!-- Semestres (se generan dinámicamente) -->
+  <div id="ec-semestres"></div>
+
+  <!-- Global de Pagos -->
+  <div class="ec-section">
+    <div class="ec-section-header">
+      <i class="bi bi-receipt-cutoff"></i>
+      <span class="ec-sem-title">Global de Pagos</span>
+    </div>
+    <div class="ec-table-wrap">
+      <table class="ec-global-table">
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Fecha</th>
+            <th>Concepto</th>
+            <th>Monto</th>
+            <th>Método de Pago</th>
+            <th>Referencia</th>
+            <th>Factura</th>
+          </tr>
+        </thead>
+        <tbody id="ec-global-body">
+          <tr>
+            <td colspan="7" class="ec-no-data">Cargando…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Datos de Facturación -->
+  <div class="ec-section">
+    <div class="ec-section-header">
+      <i class="bi bi-file-earmark-text"></i>
+      Datos de Facturación
+    </div>
+    <div class="section-body" style="padding: 14px 20px">
+      <div class="ec-fact-grid" id="ec-fact-grid">
+        <p class="ec-no-data" style="padding: 0">
+          Sin datos fiscales registrados.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notas del administrador -->
+  <div class="ec-section">
+    <div class="ec-section-header">
+      <i class="bi bi-journal-text"></i>
+      Notas
+    </div>
+    <div style="padding: 14px 20px">
+      <textarea
+        class="ec-notas-area"
+        id="ec-notas"
+        placeholder="Observaciones del administrador sobre este alumno…"
+      ></textarea>
+      <br />
+      <button class="ec-save-btn" id="ec-save-notas">
+        <i class="bi bi-floppy-fill"></i> Guardar notas
+      </button>
+    </div>
+  </div>
+</div>
