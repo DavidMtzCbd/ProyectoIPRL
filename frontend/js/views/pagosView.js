@@ -262,11 +262,12 @@ function initRegistrarPago() {
     const tieneRFC = alumno.rfc && alumno.rfc.trim() !== "";
     document.getElementById("p-factura").value = tieneRFC ? "Sí" : "No";
 
-    // Obtener semestre más reciente para mostrar precios
-    let semInfo = "";
+    const nombreCompleto = `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`;
+    let semHTML = "";
+
     try {
       const semestres = await getSemestres(alumno._id);
-      if (semestres.length) {
+      if (semestres && semestres.length > 0) {
         const sem = semestres.sort((a, b) => b.numSemestre - a.numSemestre)[0];
         const beca = sem.descuentoPorcentaje ?? 0;
         const mul = 1 - beca / 100;
@@ -275,29 +276,27 @@ function initRegistrarPago() {
             style: "currency",
             currency: "MXN",
           }).format(v);
-        const becaBadge =
-          beca > 0
-            ? `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde68a;border-radius:99px;padding:1px 8px;font-size:.72rem;font-weight:700;">Beca ${beca}%</span>`
-            : "";
-        semInfo = `
-          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;">
-            ${becaBadge}
-            <span>Insc. <strong>${fmt(sem.inscripcion * mul)}</strong></span>
-            <span>Reinsc. <strong>${fmt(sem.reinscripcion * mul)}</strong></span>
-            <span>Colegiatura <strong>${fmt(sem.colegiaturaMensual * mul)}</strong></span>
-          </div>`;
+
+        semHTML = `
+          <div class="alumno-preview-prices">
+            <span>Inscripción: <strong class="alumno-preview-price-val">${fmt(sem.inscripcion * mul)}</strong></span>
+            <span>Reinscripción: <strong class="alumno-preview-price-val">${fmt(sem.reinscripcion * mul)}</strong></span>
+            <span>Colegiatura: <strong class="alumno-preview-price-val">${fmt(sem.colegiaturaMensual * mul)} / mes</strong></span>
+          </div>
+          ${beca > 0 ? `<div class="alumno-preview-beca"><i class="bi bi-stars"></i> Beca del ${beca}% aplicada</div>` : ""}`;
       }
     } catch {
       /* sin semestres */
     }
 
-    const nombreCompleto = `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`;
     previewEl.innerHTML = `
-      <span class="alumno-preview--found" style="flex-direction:column;align-items:flex-start;gap:2px;">
-        <span><i class="bi bi-person-check-fill"></i> ${nombreCompleto}</span>
-        ${semInfo}
-        ${tieneRFC ? `<span style="font-size:.75rem;color:#4ade80;"><i class="bi bi-receipt-cutoff"></i> Datos fiscales registrados — factura auto-seleccionada</span>` : ""}
-      </span>`;
+      <div class="alumno-preview-card">
+        <div class="alumno-preview-header">
+          <strong class="alumno-preview-name"><i class="bi bi-person-check-fill"></i> ${nombreCompleto}</strong>
+          ${tieneRFC ? `<span class="badge-auto-factura"><i class="bi bi-receipt"></i> Factura auto-seleccionada</span>` : ""}
+        </div>
+        ${semHTML}
+      </div>`;
   }
 
   // ── Seleccionar alumno del dropdown ────────────────────────────────────────
