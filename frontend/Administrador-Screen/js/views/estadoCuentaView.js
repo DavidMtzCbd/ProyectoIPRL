@@ -1,11 +1,11 @@
-import { appState } from "../state.js";
+import { appState } from "../../../Shared/js/state.js";
 import {
   getAlumnoById,
   getAlumnoPagos,
   getSemestres,
   updateAlumno,
-} from "../api.js";
-import { showAlert, formatMoney, formatDate } from "../ui.js";
+} from "../../../Shared/js/api.js";
+import { showAlert, formatMoney, formatDate } from "../../../Shared/js/ui.js";
 
 // ── Definición de columnas por semestre ───────────────────────────────────────
 //

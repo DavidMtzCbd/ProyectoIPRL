@@ -5,13 +5,13 @@ export async function initLogout() {
   if (!document.querySelector('link[href*="logoutModal.css"]')) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "./styles/logoutModal.css";
+    link.href = "../Shared/styles/logoutModal.css";
     document.head.appendChild(link);
   }
 
   // 2. Cargar el HTML del componente
   try {
-    const response = await fetch("./components/logoutModal.html");
+    const response = await fetch("../Shared/components/logoutModal.html");
     const html = await response.text();
     document.body.insertAdjacentHTML("beforeend", html);
 
@@ -27,6 +27,8 @@ function setupLogoutListeners() {
   const btnCancel = document.getElementById("btn-cancel-logout");
   const btnConfirm = document.getElementById("btn-confirm-logout");
   const usernameSpan = document.getElementById("logout-username");
+
+  if (!btnOpen || !modal || !btnCancel || !btnConfirm) return;
 
   if (!btnOpen) return;
 
@@ -47,6 +49,6 @@ function setupLogoutListeners() {
       "%c👋 Sesión cerrada - Token eliminado",
       "color: red; font-weight: bold;",
     );
-    window.location.href = "login.html";
+    window.location.href = "../login.html";
   });
 }

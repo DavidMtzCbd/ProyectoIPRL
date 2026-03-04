@@ -1,6 +1,12 @@
-import { appState, setToken } from "./state.js";
-import { getMe, getSemestres, getAlumnoPagos, updateAlumno } from "./api.js";
-import { showAlert } from "./ui.js";
+import { appState, setToken } from "../../Shared/js/state.js";
+import {
+  getMe,
+  getSemestres,
+  getAlumnoPagos,
+  updateAlumno,
+} from "../../Shared/js/api.js";
+import { showAlert } from "../../Shared/js/ui.js";
+import { initSessionMonitor } from "../../Shared/js/sessionMonitor.js";
 
 // Importar Controladores de Vista
 import { renderPerfil, renderFacturacion } from "./views/alumnoPerfilView.js";
@@ -61,16 +67,18 @@ async function guardarFacturacion() {
 async function bootstrap() {
   // 1. Verificar sesión
   if (!appState.token) {
-    window.location.href = "login.html";
+    window.location.href = "../login.html";
     return;
   }
+
+  initSessionMonitor();
 
   try {
     const me = await getMe();
 
     // Si no es alumno, redirigir al panel admin
     if (me.rol !== "alumno" || !me.alumno) {
-      window.location.href = "index.html";
+      window.location.href = "../Administrador-Screen/index.html";
       return;
     }
 
@@ -98,8 +106,7 @@ async function bootstrap() {
   } catch (error) {
     // Token expirado o inválido
     console.error("Bootstrap error:", error);
-    localStorage.removeItem("token");
-    window.location.href = "login.html";
+    window.location.href = "../login.html";
   }
 
   // Evento global para Cerrar sesión
@@ -107,8 +114,7 @@ async function bootstrap() {
   if (btnLogout) {
     btnLogout.addEventListener("click", () => {
       localStorage.removeItem("token");
-      localStorage.removeItem("usuario");
-      window.location.href = "login.html";
+      window.location.href = "../login.html";
     });
   }
 }

@@ -25,7 +25,7 @@ exports.iniciarSesion = async (req, res) => {
   const token = jwt.sign(
     { id: usuarioDB._id, rol: usuarioDB.rol },
     process.env.SECRETOKEYJWT,
-    { expiresIn: "4h" },
+    { expiresIn: "1h" },
   );
   res.json({ token, rol: usuarioDB.rol });
 };

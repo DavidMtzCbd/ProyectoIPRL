@@ -1,6 +1,7 @@
-import { appState } from "./state.js";
-import { initLogout } from "./logout.js";
-import { showAlert, changeViewUI } from "./ui.js";
+import { appState } from "../../Shared/js/state.js";
+import { initLogout } from "../../Shared/js/logout.js";
+import { showAlert, changeViewUI } from "../../Shared/js/ui.js";
+import { initSessionMonitor } from "../../Shared/js/sessionMonitor.js";
 
 //Importación de la logica de las vistas del proyecto
 import { initDashboard } from "./views/dashboardView.js";
@@ -65,9 +66,10 @@ async function bootstrap() {
 
   //Cargar la vista inicial
   if (appState.token) {
+    initSessionMonitor(); // Monitorear el progreso de la sesión JWT
     await loadView("dashboard");
   } else {
-    window.location.href = "login.html";
+    window.location.href = "../login.html";
   }
 }
 

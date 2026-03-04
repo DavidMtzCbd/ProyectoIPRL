@@ -22,9 +22,9 @@ loginForm.addEventListener("submit", async (e) => {
 
     // Redirigir según el rol
     if (data.rol === "alumno") {
-      window.location.href = "alumno.html";
+      window.location.href = "Alumno-Screen/alumno.html";
     } else {
-      window.location.href = "index.html";
+      window.location.href = "Administrador-Screen/index.html";
     }
   } catch (error) {
     alert("Error de acceso: " + error.message);

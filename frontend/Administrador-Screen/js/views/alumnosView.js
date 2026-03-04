@@ -7,7 +7,7 @@ import {
   getSemestres,
   createSemestre,
   updateSemestre,
-} from "../api.js";
+} from "../../../Shared/js/api.js";
 
 import {
   fillTable,
@@ -16,9 +16,9 @@ import {
   formatMoney,
   Paginator,
   loadModals,
-} from "../ui.js";
+} from "../../../Shared/js/ui.js";
 
-import { appState } from "../state.js";
+import { appState } from "../../../Shared/js/state.js";
 
 // ── Helpers de modal ──────────────────────────────────────────────────────────
 

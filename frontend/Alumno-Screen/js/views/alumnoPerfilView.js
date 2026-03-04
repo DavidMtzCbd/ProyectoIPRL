@@ -1,4 +1,4 @@
-import { formatMoney } from "../ui.js";
+import { formatMoney } from "../../../Shared/js/ui.js";
 
 export function renderPerfil(alumno) {
   const nombre = `${alumno.apellidoPaterno} ${alumno.apellidoMaterno} ${alumno.nombre}`;

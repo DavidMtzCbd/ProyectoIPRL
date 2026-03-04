@@ -1,4 +1,4 @@
-import { formatMoney, formatDate } from "../ui.js";
+import { formatMoney, formatDate } from "../../../Shared/js/ui.js";
 
 const CONCEPTO_ICON = {
   Inscripción: "bi-file-earmark-text-fill",

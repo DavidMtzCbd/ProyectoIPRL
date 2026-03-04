@@ -1,4 +1,4 @@
-import { formatMoney } from "../ui.js";
+import { formatMoney } from "../../../Shared/js/ui.js";
 
 export function renderSemestre(semestres) {
   const tbody = document.getElementById("colegiatura-body");

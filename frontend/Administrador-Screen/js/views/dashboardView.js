@@ -1,5 +1,5 @@
-import { getDashboardAdmin } from "../api.js";
-import { formatMoney, formatDate, fillTable } from "../ui.js";
+import { getDashboardAdmin } from "../../../Shared/js/api.js";
+import { formatMoney, formatDate, fillTable } from "../../../Shared/js/ui.js";
 
 export async function initDashboard() {
   const data = await getDashboardAdmin();

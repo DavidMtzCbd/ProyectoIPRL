@@ -5,7 +5,7 @@ import {
   getAlumnoByMatricula,
   getAlumnos,
   getSemestres,
-} from "../api.js";
+} from "../../../Shared/js/api.js";
 
 import {
   formatMoney,
@@ -14,7 +14,7 @@ import {
   showAlert,
   Paginator,
   loadModals,
-} from "../ui.js";
+} from "../../../Shared/js/ui.js";
 
 // ── Helpers de modal ──────────────────────────────────────────────────────────
 
