@@ -1,83 +1,147 @@
-/* Estilos base para el login */
-body {
+/* ── Login con Google OAuth 2.0 ─────────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
   margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background-color: #0f172a;
+  padding: 0;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .login-container {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   width: 100%;
-  max-width: 380px;
+  max-width: 400px;
+  padding: 16px;
 }
 
-.login-form h2 {
-  text-align: center;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
+.login-form {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px 36px;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
-.login-form p {
-  text-align: center;
+
+/* ── Logo ──────────────────────────────────────────────────────────────────── */
+
+.login-logo {
+  margin-bottom: 6px;
+}
+
+.login-logo__circle {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+.login-logo__circle span {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+/* ── Título y subtítulo ─────────────────────────────────────────────────────── */
+
+.login-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  margin-top: 4px;
+}
+
+.login-subtitle {
+  font-size: 0.85rem;
   color: #64748b;
-  margin-bottom: 2rem;
-  font-size: 0.9rem;
+  margin-bottom: 12px;
 }
 
-.form-group {
-  margin-bottom: 1.2rem;
-}
-.form-group label {
-  display: block;
-  margin-bottom: 0.4rem;
-  color: #475569;
-  font-weight: 500;
-}
-.form-group input {
-  width: 100%;
-  padding: 0.8rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  box-sizing: border-box;
+/* ── Botón de Google ─────────────────────────────────────────────────────────── */
+
+.google-btn-wrapper {
+  margin: 12px 0 6px;
+  display: flex;
+  justify-content: center;
 }
 
-.btn-login {
+/* ── Mensaje de error ───────────────────────────────────────────────────────── */
+
+.login-error {
   width: 100%;
-  padding: 0.8rem;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
+  text-align: center;
+  margin-top: 4px;
 }
 
-.btn-login:hover {
-  background: #1d4ed8;
+/* ── Loading ────────────────────────────────────────────────────────────────── */
+
+.login-loading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #475569;
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin-top: 4px;
 }
 
-/* Animación de carga */
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
+.login-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #2563eb;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  display: inline-block;
-  margin-right: 8px;
-  vertical-align: middle;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ── Hint ────────────────────────────────────────────────────────────────────── */
+
+.login-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 440px) {
+  .login-form {
+    padding: 30px 22px;
+    border-radius: 16px;
   }
 }

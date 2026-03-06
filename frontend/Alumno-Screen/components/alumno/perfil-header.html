@@ -12,26 +12,40 @@
   </div>
 </div>
 
-<!-- Tarjetas de resumen -->
+<!-- Tarjeta Hero de Saldo Actual -->
+<div class="saldo-hero">
+  <div class="saldo-hero__left">
+    <div class="saldo-hero__label">
+      <i class="bi bi-wallet2"></i> Saldo Actual
+    </div>
+    <div class="saldo-hero__amount" id="card-saldo">—</div>
+    <div class="saldo-hero__note" id="saldo-nota">
+      Actualizado al momento de tu sesión
+    </div>
+  </div>
+  <div class="saldo-hero__right">
+    <span class="status-badge" id="card-estatus">—</span>
+  </div>
+</div>
+
+<!-- Grid secundario: Semestre activo -->
 <div class="summary-grid">
-  <div class="summary-card">
-    <div class="summary-card__label">
-      <i class="bi bi-wallet2"></i> Saldo actual
-    </div>
-    <div class="summary-card__value" id="card-saldo">—</div>
-  </div>
-  <div class="summary-card">
-    <div class="summary-card__label">
-      <i class="bi bi-shield-check"></i> Estatus
-    </div>
-    <div class="summary-card__value">
-      <span class="status-badge" id="card-estatus">—</span>
-    </div>
-  </div>
   <div class="summary-card">
     <div class="summary-card__label">
       <i class="bi bi-calendar3"></i> Semestre activo
     </div>
     <div class="summary-card__value" id="card-semestre">—</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-card__label">
+      <i class="bi bi-mortarboard-fill"></i> Oferta educativa
+    </div>
+    <div
+      class="summary-card__value"
+      id="card-oferta"
+      style="font-size: 0.95rem; font-weight: 600"
+    >
+      —
+    </div>
   </div>
 </div>

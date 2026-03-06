@@ -7,6 +7,7 @@ import {
 } from "../../Shared/js/api.js";
 import { showAlert } from "../../Shared/js/ui.js";
 import { initSessionMonitor } from "../../Shared/js/sessionMonitor.js";
+import { initLogout } from "../../Shared/js/logout.js";
 
 // Importar Controladores de Vista
 import { renderPerfil, renderFacturacion } from "./views/alumnoPerfilView.js";
@@ -109,14 +110,8 @@ async function bootstrap() {
     window.location.href = "../login.html";
   }
 
-  // Evento global para Cerrar sesión
-  const btnLogout = document.getElementById("btn-logout");
-  if (btnLogout) {
-    btnLogout.addEventListener("click", () => {
-      localStorage.removeItem("token");
-      window.location.href = "../login.html";
-    });
-  }
+  // Modal compartido de Cerrar sesión
+  await initLogout();
 }
 
 bootstrap();

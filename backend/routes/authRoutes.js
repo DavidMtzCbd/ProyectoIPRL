@@ -3,11 +3,11 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 const { verificarToken } = require("../middlewares/authMiddleware");
 
-// Ruta para iniciar sesión
-router.post("/login", authController.iniciarSesion);
+// Inicio de sesión con Google OAuth 2.0
+router.post("/google", authController.googleLogin);
 
-// Registro de usuario (solo admins crean cuentas)
-router.post("/registro", authController.registrarUsuario);
+// Registro de usuario (solo admins crean cuentas — requiere token de admin)
+router.post("/registro", verificarToken, authController.registrarUsuario);
 
 // Datos del usuario autenticado (requiere token)
 router.get("/me", verificarToken, authController.getMe);

@@ -83,18 +83,18 @@ function renderTablaAlumnos(alumnos) {
       (a) => `
     <tr>
       <td>${a.apellidoPaterno} ${a.apellidoMaterno} ${a.nombre}</td>
-      <td>${a.matricula}</td>
-      <td>${a.correo}</td>
-      <td>${a.ofertaAcademica}</td>
+      <td class="col-hide-mobile">${a.matricula}</td>
+      <td class="col-hide-mobile">${a.correo}</td>
+      <td class="col-hide-tablet">${a.ofertaAcademica}</td>
       <td>${badgeEstatus(a.estatus)}</td>
-      <td style="display:flex;gap:6px;flex-wrap:wrap">
+      <td class="acciones-td">
         <button class="btn-sm btn-action btn-ver-alumno" data-id="${a._id}">
-          <i class="bi bi-eye-fill"></i> Ver
+          <i class="bi bi-eye-fill"></i> <span class="col-hide-mobile">Ver</span>
         </button>
         <button class="btn-sm btn-primary btn-editar-alumno" data-id="${a._id}"
           data-estatus="${a.estatus}" data-saldo="${a.saldoActual}"
           data-nombre="${a.apellidoPaterno} ${a.apellidoMaterno} ${a.nombre}">
-          <i class="bi bi-pencil-fill"></i> Editar
+          <i class="bi bi-pencil-fill"></i> <span class="col-hide-mobile">Editar</span>
         </button>
       </td>
     </tr>
@@ -258,15 +258,24 @@ async function abrirDetalleAlumno(id) {
       getSemestres(id).catch(() => []),
     ]);
 
-    const grid = document.getElementById("alumno-info-grid");
-    grid.innerHTML = `
-      <div class="detail-item"><span>Nombre completo</span><span>${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}</span></div>
-      <div class="detail-item"><span>Matrícula</span><span>${alumno.matricula}</span></div>
-      <div class="detail-item"><span>Correo</span><span>${alumno.correo}</span></div>
-      <div class="detail-item"><span>Oferta académica</span><span>${alumno.ofertaAcademica}</span></div>
-      <div class="detail-item"><span>Estatus</span><span>${badgeEstatus(alumno.estatus)}</span></div>
-      <div class="detail-item"><span>Saldo actual</span><span>${formatMoney(alumno.saldoActual)}</span></div>
-    `;
+    // Rellena campos del modal (estructura estática en HTML, datos en JS)
+    const set = (elId, valor) => {
+      const el = document.getElementById(elId);
+      if (el) el.textContent = valor ?? "—";
+    };
+
+    set(
+      "da-nombre",
+      `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`,
+    );
+    set("da-matricula", alumno.matricula);
+    set("da-correo", alumno.correo);
+    set("da-oferta", alumno.ofertaAcademica);
+    set("da-saldo", formatMoney(alumno.saldoActual));
+
+    // Estatus requiere HTML (badge con clase)
+    const daEstatus = document.getElementById("da-estatus");
+    if (daEstatus) daEstatus.innerHTML = badgeEstatus(alumno.estatus);
 
     // Semestres
     const semContainer = document.getElementById("semestres-lista");
@@ -417,8 +426,6 @@ function initSemestre() {
     });
 }
 
-// ── Agregar alumno ────────────────────────────────────────────────────────────
-
 function initAgregarAlumno() {
   document
     .getElementById("btn-agregar-alumno")
@@ -431,7 +438,8 @@ function initAgregarAlumno() {
     .getElementById("form-agregar-alumno")
     .addEventListener("submit", async (e) => {
       e.preventDefault();
-      const data = {
+      const gmail = document.getElementById("a-correo").value.trim();
+      const alumnoData = {
         nombre: document.getElementById("a-nombre").value.trim(),
         apellidoPaterno: document.getElementById("a-ap").value.trim(),
         apellidoMaterno: document.getElementById("a-am").value.trim(),
@@ -440,11 +448,36 @@ function initAgregarAlumno() {
         ofertaAcademica: document.getElementById("a-oferta").value.trim(),
         estatus: document.getElementById("a-estatus").value,
       };
+
       try {
-        await createAlumno(data);
+        // 1. Crear el registro de Alumno
+        const nuevoAlumno = await createAlumno(alumnoData);
+
+        // 2. Crear el Usuario vinculado al Gmail para que pueda iniciar sesión
+        try {
+          await fetch("http://localhost:3000/api/auth/registro", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${appState.token}`,
+            },
+            body: JSON.stringify({
+              googleEmail: gmail,
+              rol: "alumno",
+              alumno: nuevoAlumno._id,
+            }),
+          });
+        } catch {
+          showAlert(
+            `Alumno creado, pero hubo un error al registrar la cuenta de Gmail (${gmail}). Verifica que no esté ya registrado.`,
+            "error",
+          );
+        }
+
         closeModal("modal-agregar-alumno");
-        showAlert("Alumno registrado correctamente ✔", "success");
+        showAlert(`Alumno registrado ✔ — Gmail vinculado: ${gmail}`, "success");
         await cargarAlumnos();
+        initFiltros();
       } catch (error) {
         showAlert("Error: " + error.message, "error");
       }

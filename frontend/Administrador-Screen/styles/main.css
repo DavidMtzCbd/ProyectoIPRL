@@ -160,69 +160,111 @@ td {
   color: var(--danger);
 }
 
+/* ── Responsive — Columnas ocultables en mobile/tablet ─────────────────────── */
+
+/* Por defecto las columnas se muestran */
+.col-hide-mobile,
+.col-hide-tablet {
+  display: table-cell;
+}
+
+/* .col-show-mobile solo visible en mobile (oculto en desktop) */
+.col-show-mobile {
+  display: none;
+}
+
+/* Celda de acciones: siempre en fila, sin desbordarse */
+.acciones-td {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
-  /* Layout: de 2 columnas a 1 columna */
+  /* Layout: pasa a 1 columna vertical */
   .app-shell {
     grid-template-columns: 1fr;
-    min-height: auto;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
   }
 
-  /* Sidebar: compacto, solo botones de navegación visibles */
+  /* Sidebar → topnav compacta pegada arriba */
   .sidebar {
-    padding: 16px 16px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    height: auto !important; /* cancela el 100vh del desktop */
+    padding: 10px 14px 0;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+  }
+
+  /* Fila superior: logo + subtítulo */
+  .sidebar-top-row {
+    display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 8px;
   }
 
-  /* Título IPRL queda a la izquierda */
   .sidebar h1 {
     margin: 0;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+    line-height: 1;
   }
 
-  /* Subtítulo: ocultar en pantallas muy pequeñas */
   .sidebar__subtitle {
     display: none;
   }
 
-  /* Nav: botones en fila horizontal */
+  /* Nav: scroll horizontal, sin salto de línea */
   nav {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 6px;
     margin-top: 0;
-    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: none; /* Firefox */
+    -webkit-overflow-scrolling: touch;
   }
 
+  nav::-webkit-scrollbar {
+    display: none;
+  } /* Chrome/Safari */
+
   .nav-btn {
-    flex: 1 1 auto;
-    min-width: 110px;
+    flex: 0 0 auto; /* no se encoge: garantiza scroll */
+    white-space: nowrap;
     text-align: center;
-    padding: 8px 10px;
-    font-size: 0.85rem;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    border-radius: 8px;
+  }
+
+  /* User menu: pegado arriba a la derecha sobre el topnav */
+  .user-menu-container {
+    top: 0.6rem;
+    right: 0.75rem;
+    z-index: 300;
   }
 
   /* Contenido principal */
   .content {
-    padding: 16px 12px;
+    padding: 14px 12px 40px;
   }
 
-  /* Topbar: quitar flex-column, dejar en fila pero con wrap */
+  /* Topbar (título de vista + acciones) */
   .topbar {
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 12px;
-  }
-
-  /* User menu: se ajusta para no chocarse con el sidebar */
-  .user-menu-container {
-    top: 0.7rem;
-    right: 0.75rem;
   }
 
   /* Cards: columna única */
@@ -231,12 +273,11 @@ td {
     gap: 10px;
   }
 
-  /* Card número grande un poco menor */
   .card p {
     font-size: 1.6rem;
   }
 
-  /* Tablas: scroll horizontal en lugar de deformar */
+  /* Tablas: scroll horizontal */
   .table-card {
     overflow-x: auto;
   }
@@ -245,7 +286,7 @@ td {
     min-width: 480px;
   }
 
-  /* Encabezado de vistas (título + botón agregar) */
+  /* View-header (título + botón agregar) */
   .view-header {
     flex-direction: column;
     align-items: flex-start;
@@ -263,9 +304,24 @@ td {
     width: 100%;
   }
 
-  /* Modales: ancho casi completo en móvil */
+  /* Modales: ocupan casi toda la pantalla, body con scroll */
   .modal {
-    max-width: 98vw;
+    max-width: 99vw;
+    max-height: 92vh;
+    border-radius: 14px 14px 0 0;
+    margin-top: auto;
+    width: 100%;
+  }
+
+  .modal-overlay {
+    align-items: flex-end; /* modal sube desde abajo */
+    padding: 0;
+  }
+
+  .modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .form-grid {
@@ -274,6 +330,46 @@ td {
 
   .form-group.full-width {
     grid-column: 1;
+  }
+
+  /* detail-grid: 1 columna en mobile */
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Tablet (600 – 900px): ocultar solo col-hide-tablet ─────────────────────── */
+@media (max-width: 900px) and (min-width: 601px) {
+  .col-hide-tablet {
+    display: none;
+  }
+}
+
+/* ── Mobile (≤ 600px): ocultar col-hide-mobile y col-hide-tablet ─────────────── */
+@media (max-width: 600px) {
+  .col-hide-mobile,
+  .col-hide-tablet {
+    display: none;
+  }
+
+  .col-show-mobile {
+    display: inline;
+  }
+
+  /* Sin min-width: el scroll horizontal ya no es necesario cuando se ocultan columnas */
+  table {
+    min-width: 0;
+  }
+
+  /* Botones de acción: solo icono */
+  .acciones-td {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .btn-sm {
+    padding: 6px 8px;
   }
 }
 
@@ -861,4 +957,47 @@ td {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* ── Paginación del Dashboard ─────────────────────────────────────────────── */
+
+.dash-paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 4px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.dash-pag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.dash-pag-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: var(--primary);
+}
+
+.dash-pag-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.dash-pag-info {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
 }

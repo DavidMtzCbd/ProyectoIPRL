@@ -1,6 +1,7 @@
 import { appState } from "./state.js";
 
-const API_BASE_URL = "http://localhost:3000/api";
+export const API_BASE = "http://localhost:3000/api";
+const API_BASE_URL = API_BASE;
 
 async function request(path, options = {}) {
   const headers = {
@@ -24,13 +25,6 @@ async function request(path, options = {}) {
   }
 
   return response.json();
-}
-
-export function login(credentials) {
-  return request("/auth/login", {
-    method: "POST",
-    body: JSON.stringify(credentials),
-  });
 }
 
 export function getMe() {

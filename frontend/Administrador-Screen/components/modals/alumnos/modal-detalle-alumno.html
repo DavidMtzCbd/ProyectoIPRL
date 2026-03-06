@@ -6,7 +6,33 @@
       <button class="modal-close" data-close="modal-detalle-alumno">✕</button>
     </div>
     <div class="modal-body">
-      <div class="detail-grid" id="alumno-info-grid"></div>
+      <!-- Info del alumno (JS solo rellena los spans con id da-*) -->
+      <div class="detail-grid" id="alumno-info-grid">
+        <div class="detail-item">
+          <span>Nombre completo</span>
+          <span id="da-nombre">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Matrícula</span>
+          <span id="da-matricula">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Correo</span>
+          <span id="da-correo">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Oferta académica</span>
+          <span id="da-oferta">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Estatus</span>
+          <span id="da-estatus">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Saldo actual</span>
+          <span id="da-saldo">—</span>
+        </div>
+      </div>
 
       <!-- Sección semestres -->
       <div

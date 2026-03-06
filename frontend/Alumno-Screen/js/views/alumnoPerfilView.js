@@ -26,11 +26,28 @@ export function renderPerfil(alumno) {
     estatusChip.innerHTML = `<i class="bi bi-circle-fill" style="font-size:.5rem"></i> ${alumno.estatus}`;
   }
 
-  // Tarjetas de resumen
+  // Tarjeta hero de saldo
   const cardSaldo = document.getElementById("card-saldo");
   if (cardSaldo) {
     cardSaldo.textContent = formatMoney(alumno.saldoActual);
-    cardSaldo.className = `summary-card__value ${alumno.saldoActual > 0 ? "summary-card__value--red" : "summary-card__value--green"}`;
+    const cls =
+      alumno.saldoActual > 0
+        ? "saldo-hero__amount--deuda"
+        : alumno.saldoActual < 0
+          ? "saldo-hero__amount--favor"
+          : "saldo-hero__amount--cero";
+    cardSaldo.className = `saldo-hero__amount ${cls}`;
+  }
+
+  // Nota descriptiva del saldo
+  const saldoNota = document.getElementById("saldo-nota");
+  if (saldoNota) {
+    if (alumno.saldoActual > 0)
+      saldoNota.textContent = "Tienes un adeudo pendiente con la institución.";
+    else if (alumno.saldoActual < 0)
+      saldoNota.textContent =
+        "Tienes saldo a favor. Contacta a Control Escolar.";
+    else saldoNota.textContent = "Tu cuenta está al corriente. ¡Sigue así!";
   }
 
   const estatusBadge = document.getElementById("card-estatus");
@@ -44,6 +61,9 @@ export function renderPerfil(alumno) {
     estatusBadge.className = `status-badge status-badge--${clsBadge}`;
     estatusBadge.innerHTML = `<i class="bi bi-circle-fill" style="font-size:.5rem"></i> ${alumno.estatus}`;
   }
+  // Oferta educativa en la tarjeta del grid
+  const cardOferta = document.getElementById("card-oferta");
+  if (cardOferta) cardOferta.textContent = alumno.ofertaAcademica || "—";
 }
 
 export function renderFacturacion(alumno) {

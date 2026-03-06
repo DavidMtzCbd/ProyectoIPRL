@@ -16,16 +16,19 @@ import {
   loadModals,
 } from "../../../Shared/js/ui.js";
 
-// ── Helpers de modal ──────────────────────────────────────────────────────────
+// Helpers de modal
 
+//Función para abrir el modal
 function openModal(id) {
   document.getElementById(id).style.display = "flex";
 }
 
+//Función para cerrar el modal
 function closeModal(id) {
   document.getElementById(id).style.display = "none";
 }
 
+//Función para cerrar el modal al dar click fuera de él y al presionar la tecla escape
 function bindCloseButtons() {
   document.querySelectorAll("[data-close]").forEach((btn) => {
     btn.addEventListener("click", () => closeModal(btn.dataset.close));
@@ -37,7 +40,7 @@ function bindCloseButtons() {
   });
 }
 
-// ── Tabla de pagos ─────────────────────────────────────────────────────────────
+//  Tabla de pagos
 
 let todosPagos = [];
 
@@ -62,18 +65,18 @@ function renderTablaPagos(pagos) {
       (p) => `
     <tr>
       <td><span class="badge-movimiento">#${p.movimiento ?? "-"}</span></td>
-      <td>${p.folioFactura ? `<span class="badge-folio">${p.folioFactura}</span>` : "<span class='text-muted'>—</span>"}</td>
+      <td class="col-hide-mobile">${p.folioFactura ? `<span class="badge-folio">${p.folioFactura}</span>` : "<span class='text-muted'>—</span>"}</td>
       <td>${formatDate(p.fechaPago)}</td>
-      <td>${p.alumnoID?.matricula ?? "-"}</td>
+      <td class="col-hide-mobile">${p.alumnoID?.matricula ?? "-"}</td>
       <td>${p.alumnoID ? `${p.alumnoID.apellidoPaterno} ${p.alumnoID.apellidoMaterno} ${p.alumnoID.nombre}` : "-"}</td>
-      <td>${p.concepto}</td>
+      <td class="col-hide-tablet">${p.concepto}</td>
       <td>${formatMoney(p.monto)}</td>
-      <td>${p.metodoPago}</td>
-      <td>${p.referencia ?? "-"}</td>
-      <td>${p.factura === "Sí" || p.factura === true ? "<span class='badge-active'>Sí</span>" : "<span class='badge-inactive'>No</span>"}</td>
+      <td class="col-hide-mobile">${p.metodoPago}</td>
+      <td class="col-hide-mobile">${p.referencia ?? "-"}</td>
+      <td class="col-hide-mobile">${p.factura === "Sí" || p.factura === true ? "<span class='badge-active'>Sí</span>" : "<span class='badge-inactive'>No</span>"}</td>
       <td>
         <button class="btn-sm btn-action btn-ver-pago" data-id="${p._id}">
-          <i class="bi bi-eye-fill"></i> Ver detalle
+          <i class="bi bi-eye-fill"></i> <span class="col-hide-mobile">Ver detalle</span><span class="col-show-mobile"><i class="bi bi-eye"></i></span>
         </button>
       </td>
     </tr>
@@ -87,9 +90,9 @@ function renderTablaPagos(pagos) {
   });
 }
 
-// ── Buscador por nombre o matrícula ──────────────────────────────────────────
+// **** Buscador por nombre o matrícula ****
 
-/** Quita acentos y pasa a minúsculas para comparaciones neutrales */
+//Con esta función se quitan los caracteres especiales y convierte en minuscula
 function normalizar(str) {
   return String(str ?? "")
     .normalize("NFD")
@@ -97,6 +100,7 @@ function normalizar(str) {
     .toLowerCase();
 }
 
+//Función para
 function initBuscador() {
   const form = document.getElementById("pagos-filter-form");
   const input = document.getElementById("alumno-id");
@@ -143,23 +147,29 @@ async function abrirDetallePago(id) {
   try {
     const pago = await getPagoById(id);
     const alumno = pago.alumnoID;
-    const nombreAlumno = alumno
-      ? `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`
-      : "—";
 
-    const grid = document.getElementById("pago-info-grid");
-    grid.innerHTML = `
-      <div class="detail-item"><span>Movimiento</span><span>${pago.movimiento ? `<span class="badge-movimiento">#${pago.movimiento}</span>` : "—"}</span></div>
-      <div class="detail-item"><span>Folio Factura</span><span>${pago.folioFactura ? `<span class="badge-folio">${pago.folioFactura}</span>` : "Sin folio"}</span></div>
-      <div class="detail-item"><span>Fecha de pago</span><span>${formatDate(pago.fechaPago)}</span></div>
-      <div class="detail-item"><span>Monto</span><span>${formatMoney(pago.monto)}</span></div>
-      <div class="detail-item"><span>Concepto</span><span>${pago.concepto}</span></div>
-      <div class="detail-item"><span>Método de pago</span><span>${pago.metodoPago}</span></div>
-      <div class="detail-item"><span>Alumno</span><span>${nombreAlumno}</span></div>
-      <div class="detail-item"><span>Matrícula</span><span>${alumno?.matricula ?? "—"}</span></div>
-      <div class="detail-item"><span>Referencia</span><span>${pago.referencia ?? "—"}</span></div>
-      <div class="detail-item"><span>Factura</span><span>${pago.factura ?? "Sin factura"}</span></div>
-    `;
+    // Rellena cada campo del HTML del modal
+    const set = (elId, valor) => {
+      const el = document.getElementById(elId);
+      if (el) el.textContent = valor ?? "—";
+    };
+
+    set("dp-movimiento", pago.movimiento ? `#${pago.movimiento}` : null);
+    set("dp-folio", pago.folioFactura ?? "Sin folio");
+    set("dp-fecha", formatDate(pago.fechaPago));
+    set("dp-monto", formatMoney(pago.monto));
+    set("dp-concepto", pago.concepto);
+    set("dp-metodo", pago.metodoPago);
+    set(
+      "dp-alumno",
+      alumno
+        ? `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`
+        : null,
+    );
+    set("dp-matricula", alumno?.matricula ?? null);
+    set("dp-referencia", pago.referencia ?? null);
+    set("dp-factura", pago.factura ?? "Sin factura");
+
     openModal("modal-detalle-pago");
   } catch (error) {
     showAlert("Error al cargar el pago: " + error.message, "error");
