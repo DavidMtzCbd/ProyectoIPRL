@@ -1,0 +1,79 @@
+<!-- Modal: Agregar alumno -->
+<div id="modal-agregar-alumno" class="modal-overlay" style="display: none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Registrar nuevo alumno</h3>
+      <button class="modal-close" data-close="modal-agregar-alumno">✕</button>
+    </div>
+    <form id="form-agregar-alumno">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="a-nombre">Nombre(s)</label>
+            <input
+              id="a-nombre"
+              type="text"
+              required
+              placeholder="Ej. Juan Carlos"
+            />
+          </div>
+          <div class="form-group">
+            <label for="a-ap">Apellido paterno</label>
+            <input id="a-ap" type="text" required placeholder="Ej. García" />
+          </div>
+          <div class="form-group">
+            <label for="a-am">Apellido materno</label>
+            <input id="a-am" type="text" required placeholder="Ej. López" />
+          </div>
+          <div class="form-group">
+            <label for="a-matricula">Matrícula</label>
+            <input
+              id="a-matricula"
+              type="number"
+              required
+              placeholder="Ej. 20231001"
+            />
+          </div>
+          <div class="form-group full-width">
+            <label for="a-correo"
+              >Correo Gmail (se usará para iniciar sesión)</label
+            >
+            <input
+              id="a-correo"
+              type="email"
+              required
+              placeholder="alumno@gmail.com"
+            />
+          </div>
+          <div class="form-group full-width">
+            <label for="a-oferta">Oferta académica</label>
+            <input
+              id="a-oferta"
+              type="text"
+              required
+              placeholder="Ej. Ingeniería en Sistemas"
+            />
+          </div>
+          <div class="form-group">
+            <label for="a-estatus">Estatus</label>
+            <select id="a-estatus">
+              <option value="Al corriente">Al corriente</option>
+              <option value="Adeudo">Adeudo</option>
+              <option value="Convenio">Convenio</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn-sm btn-secondary"
+          data-close="modal-agregar-alumno"
+        >
+          Cancelar
+        </button>
+        <button type="submit" class="btn-sm btn-success">Guardar alumno</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi Portal | IPRL</title>
+    <link rel="stylesheet" href="./styles/alumno.css" />
+    <link
+      rel="stylesheet"
+      href="../node_modules/bootstrap-icons/font/bootstrap-icons.min.css"
+    />
+  </head>
+  <body>
+    <!-- Barra de navegación superior -->
+    <header class="portal-header" id="main-header">
+      <div class="portal-brand">
+        <div class="portal-logo"><i class="bi bi-mortarboard-fill"></i></div>
+        <div class="portal-title-group">
+          <h1>IPRL</h1>
+          <p>Portal del Alumno</p>
+        </div>
+      </div>
+      <button id="nav-logout" class="btn-logout">
+        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+      </button>
+    </header>
+
+    <div class="portal-wrapper">
+      <section id="alerts"></section>
+      <!-- Header y Perfil se montarán aquí -->
+      <div id="comp-perfil"></div>
+
+      <!-- Componente Semestre -->
+      <div id="comp-semestre"></div>
+
+      <!-- Componente Pagos -->
+      <div id="comp-pagos"></div>
+
+      <!-- Componente Facturación -->
+      <div id="comp-facturacion"></div>
+    </div>
+    <!-- /portal-wrapper -->
+
+    <script type="module" src="./js/alumno.js"></script>
+  </body>
+</html>

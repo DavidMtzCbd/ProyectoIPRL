@@ -22,6 +22,18 @@ const pagoSchema = new mongoose.Schema(
       type: Number,
     },
 
+    // Número de movimiento: secuencial global automático (1, 2, 3…)
+    movimiento: {
+      type: Number,
+      unique: true,
+    },
+
+    // Folio de factura: solo cuando factura === "Sí" (F-0001, F-0002…)
+    folioFactura: {
+      type: String,
+      default: null,
+    },
+
     fechaPago: {
       type: Date,
       required: true,
@@ -34,7 +46,7 @@ const pagoSchema = new mongoose.Schema(
 
     metodoPago: {
       type: String,
-      enum: ["Deposito en Cuenta", "Transferencia"],
+      enum: ["Deposito en efectivo", "Transferencia"],
       required: true,
     },
 
@@ -51,6 +63,10 @@ const pagoSchema = new mongoose.Schema(
         "Maestría Colegiatura",
         "Titulación",
         "Certificados",
+        "Recuperación de cartera",
+        "Hergonomia colegiatura",
+        "Diplomado",
+        "Curso",
       ],
       required: true,
     },

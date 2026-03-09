@@ -1,0 +1,94 @@
+<!-- Modal: Detalle de alumno -->
+<div id="modal-detalle-alumno" class="modal-overlay" style="display: none">
+  <div class="modal modal--wide">
+    <div class="modal-header">
+      <h3>Detalle del alumno</h3>
+      <button class="modal-close" data-close="modal-detalle-alumno">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Info del alumno (JS solo rellena los spans con id da-*) -->
+      <div class="detail-grid" id="alumno-info-grid">
+        <div class="detail-item">
+          <span>Nombre completo</span>
+          <span id="da-nombre">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Matrícula</span>
+          <span id="da-matricula">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Correo</span>
+          <span id="da-correo">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Oferta académica</span>
+          <span id="da-oferta">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Estatus</span>
+          <span id="da-estatus">—</span>
+        </div>
+        <div class="detail-item">
+          <span>Saldo actual</span>
+          <span id="da-saldo">—</span>
+        </div>
+      </div>
+
+      <!-- Sección semestres -->
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin: 18px 0 8px;
+        "
+      >
+        <div
+          class="detail-section-title"
+          style="margin: 0; border: none; padding: 0"
+        >
+          Semestres y colegiatura
+        </div>
+        <button
+          id="btn-nuevo-semestre"
+          class="btn-sm btn-success"
+          style="display: inline-flex; align-items: center; gap: 5px"
+        >
+          <i class="bi bi-plus-circle-fill"></i> Nuevo semestre
+        </button>
+      </div>
+      <div id="semestres-lista" style="margin-bottom: 16px"></div>
+
+      <!-- Historial de pagos -->
+      <div class="detail-section-title">Historial de pagos</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Concepto</th>
+            <th>Monto</th>
+            <th>Método</th>
+          </tr>
+        </thead>
+        <tbody id="alumno-pagos-tabla"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn-sm btn-secondary"
+        data-close="modal-detalle-alumno"
+      >
+        Cerrar
+      </button>
+      <button
+        type="button"
+        id="btn-estado-cuenta"
+        class="btn-sm btn-primary"
+        style="display: inline-flex; align-items: center; gap: 6px"
+      >
+        <i class="bi bi-table"></i> Ver Estado de Cuenta
+      </button>
+    </div>
+  </div>
+</div>

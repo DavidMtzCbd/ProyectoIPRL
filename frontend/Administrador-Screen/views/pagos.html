@@ -1,0 +1,47 @@
+<section class="view active">
+  <article class="table-card">
+    <div class="view-header">
+      <h3>Pagos registrados</h3>
+      <button id="btn-registrar-pago" class="btn-sm btn-success">
+        <i class="bi bi-plus-circle-fill"></i> Registrar pago
+      </button>
+    </div>
+
+    <!-- Buscador por nombre o matrícula -->
+    <form id="pagos-filter-form" class="search-bar-form">
+      <div class="search-input-wrapper">
+        <i class="bi bi-search search-icon"></i>
+        <input
+          id="alumno-id"
+          type="text"
+          class="search-input"
+          placeholder="Buscar por nombre o matrícula del alumno…"
+          autocomplete="off"
+        />
+      </div>
+      <button type="button" id="btn-limpiar-filtro" class="btn-sm btn-clear">
+        <i class="bi bi-x-circle-fill"></i> Limpiar
+      </button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Mov.</th>
+          <th class="col-hide-mobile">Folio Factura</th>
+          <th>Fecha</th>
+          <th class="col-hide-mobile">Matrícula</th>
+          <th>Nombre</th>
+          <th class="col-hide-tablet">Concepto</th>
+          <th>Monto</th>
+          <th class="col-hide-mobile">Método</th>
+          <th class="col-hide-mobile">Referencia</th>
+          <th class="col-hide-mobile">Factura</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="pagos-table"></tbody>
+    </table>
+    <div id="pagos-pagination"></div>
+  </article>
+</section>

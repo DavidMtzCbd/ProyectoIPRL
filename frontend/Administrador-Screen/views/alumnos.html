@@ -1,0 +1,46 @@
+<section class="view active">
+  <article class="table-card">
+    <div class="view-header">
+      <h3>Alumnos registrados</h3>
+      <button id="btn-agregar-alumno" class="btn-sm btn-success">
+        <i class="bi bi-person-plus-fill"></i> Agregar alumno
+      </button>
+    </div>
+
+    <!-- Barra de filtros -->
+    <div class="filtros-bar">
+      <div class="filtro-group">
+        <i class="bi bi-search"></i>
+        <input
+          id="filtro-alumno-texto"
+          type="text"
+          placeholder="Buscar por nombre, matrícula u oferta académica…"
+        />
+      </div>
+      <select id="filtro-alumno-estatus">
+        <option value="">— Todos los estatus —</option>
+        <option value="Al corriente">Al corriente</option>
+        <option value="Adeudo">Adeudo</option>
+        <option value="Convenio">Convenio</option>
+      </select>
+      <button id="btn-limpiar-filtros-alumno" class="btn-sm btn-clear">
+        <i class="bi bi-x-circle-fill"></i> Limpiar
+      </button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th class="col-hide-mobile">Matrícula</th>
+          <th class="col-hide-mobile">Correo</th>
+          <th class="col-hide-tablet">Oferta académica</th>
+          <th>Estatus</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="alumnos-table"></tbody>
+    </table>
+    <div id="alumnos-pagination"></div>
+  </article>
+</section>

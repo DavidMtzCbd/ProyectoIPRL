@@ -1,15 +1,37 @@
 const mongoose = require("mongoose");
 
 // Definición del esquema para el modelo Usuario.
-// No hay registro público; solo admins crean cuentas.
+// Autenticación vía Google OAuth 2.0 — sin usuario/contraseña local.
 
 const UsuarioSchema = new mongoose.Schema(
   {
-    usuario: { type: String, required: true, unique: true },
-    contrasena: { type: String, required: true },
-    rol: { type: String, enum: ["administrador", "alumno"], required: true },
+    googleEmail: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
 
-    // Relación opcional con alumno
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true, // permite múltiples null sin error de duplicado
+      default: null,
+    },
+
+    nombre: {
+      type: String,
+      required: true,
+    },
+
+    rol: {
+      type: String,
+      enum: ["administrador", "alumno"],
+      required: true,
+    },
+
+    // Relación opcional con alumno (solo cuando rol === "alumno")
     alumno: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Alumno",
@@ -19,7 +41,7 @@ const UsuarioSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // Añade createdAt y updatedAt automáticamente
+    timestamps: true,
   },
 );
 

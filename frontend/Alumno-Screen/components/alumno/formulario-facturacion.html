@@ -1,0 +1,68 @@
+<!-- Sección: Datos de facturación -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">
+      <i class="bi bi-receipt-cutoff"></i>
+      Datos de facturación
+    </div>
+  </div>
+  <div class="section-body">
+    <p style="font-size: 0.82rem; color: var(--muted); margin-bottom: 16px">
+      Si requieres factura en futuros pagos, registra tus datos fiscales aquí.
+      El administrador los usará automáticamente al generar tu factura.
+    </p>
+    <div class="fact-grid">
+      <div class="fact-group">
+        <label for="f-rfc">RFC</label>
+        <input
+          id="f-rfc"
+          type="text"
+          maxlength="13"
+          placeholder="XAXX010101000"
+        />
+      </div>
+      <div class="fact-group">
+        <label for="f-razon">Razón social</label>
+        <input id="f-razon" type="text" placeholder="Nombre o empresa" />
+      </div>
+      <div class="fact-group">
+        <label for="f-cfdi">Uso de CFDI</label>
+        <select id="f-cfdi">
+          <option value="">— Seleccionar —</option>
+          <option value="G01">G01 – Adquisición de mercancias</option>
+          <option value="G03">G03 – Gastos en general</option>
+          <option value="D10">D10 – Pagos por servicios educativos</option>
+          <option value="S01">S01 – Sin efectos fiscales</option>
+          <option value="CP01">CP01 – Pagos</option>
+        </select>
+      </div>
+      <div class="fact-group">
+        <label for="f-regimen">Régimen fiscal</label>
+        <select id="f-regimen">
+          <option value="">— Seleccionar —</option>
+          <option value="601">601 – General de Ley Personas Morales</option>
+          <option value="605">605 – Sueldos y salarios</option>
+          <option value="606">606 – Arrendamiento</option>
+          <option value="612">612 – Personas físicas con actividades</option>
+          <option value="616">616 – Sin obligaciones fiscales</option>
+          <option value="621">621 – Incorporación fiscal</option>
+          <option value="625">625 – Plataformas tecnológicas</option>
+        </select>
+      </div>
+      <div class="fact-group full">
+        <label for="f-domicilio">Domicilio fiscal (código postal)</label>
+        <input
+          id="f-domicilio"
+          type="text"
+          maxlength="5"
+          placeholder="Ej. 22000"
+        />
+      </div>
+    </div>
+    <div class="fact-actions">
+      <button class="btn-fact-save" id="btn-guardar-fact">
+        <i class="bi bi-floppy-fill"></i> Guardar datos fiscales
+      </button>
+    </div>
+  </div>
+</div>

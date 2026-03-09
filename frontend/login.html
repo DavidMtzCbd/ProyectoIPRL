@@ -3,45 +3,62 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Acceso al Sistema | IPRL</title>
-    <link rel="stylesheet" href="./styles/login.css" />
-    <link
-      rel="stylesheet"
-      href="./node_modules/bootstrap-icons/font/bootstrap-icons.min.css"
+    <!-- Permite que Google Sign-In use postMessage correctamente -->
+    <meta
+      http-equiv="Cross-Origin-Opener-Policy"
+      content="same-origin-allow-popups"
     />
+    <title>Acceso al Sistema | IPRL</title>
+    <link rel="stylesheet" href="./Shared/styles/login.css" />
+    <!-- Google Identity Services — se carga antes que el módulo JS -->
+    <script src="https://accounts.google.com/gsi/client"></script>
   </head>
   <body>
     <div class="login-container">
-      <form id="login-form" class="login-form">
-        <h2>IPRL</h2>
-        <p>Control escolar y financiero</p>
+      <div class="login-form">
+        <!-- Logo / Encabezado -->
+        <div class="login-logo">
+          <div class="login-logo__circle">
+            <span>IP</span>
+          </div>
+        </div>
+        <h2 class="login-title">IPRL</h2>
+        <p class="login-subtitle">Control escolar y financiero</p>
 
-        <div class="form-group">
-          <label for="usuario">Usuario</label>
-          <input
-            type="text"
-            id="usuario"
-            required
-            placeholder="Ingresa tu usuario"
-          />
+        <!-- Mensaje de error -->
+        <div id="login-error" class="login-error" style="display: none"></div>
+        <div id="login-loading" class="login-loading" style="display: none">
+          <div class="login-spinner"></div>
+          <span>Verificando identidad…</span>
         </div>
 
-        <div class="form-group">
-          <label for="contrasena">Contraseña</label>
-          <input
-            type="password"
-            id="contrasena"
-            required
-            placeholder="••••••••"
-          />
+        <!-- Botón oficial de Google -->
+        <div
+          id="g_id_onload"
+          data-client_id="1020740142848-eul33db5tnionjki0933cgkttuipl4hj.apps.googleusercontent.com"
+          data-callback="handleGoogleCredential"
+          data-auto_prompt="false"
+        ></div>
+
+        <div class="google-btn-wrapper">
+          <div
+            class="g_id_signin"
+            data-type="standard"
+            data-size="large"
+            data-theme="outline"
+            data-text="signin_with"
+            data-shape="rectangular"
+            data-logo_alignment="left"
+            data-width="280"
+          ></div>
         </div>
 
-        <button type="submit" class="btn-login">
-          <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
-        </button>
-      </form>
+        <p class="login-hint">
+          Solo pueden acceder las cuentas registradas en el sistema.
+        </p>
+      </div>
     </div>
 
-    <script type="module" src="./js/login.js"></script>
+    <script type="module" src="./Shared/js/login.js"></script>
   </body>
 </html>

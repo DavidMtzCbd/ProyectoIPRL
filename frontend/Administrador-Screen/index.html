@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel Administrador | IPRL</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+    <link rel="stylesheet" href="./styles/views/pagos.css" />
+    <link rel="stylesheet" href="./styles/views/alumnos.css" />
+    <link
+      rel="stylesheet"
+      href="../node_modules/bootstrap-icons/font/bootstrap-icons.min.css"
+    />
+  </head>
+  <body>
+    <div class="user-menu-container">
+      <div class="user-profile-trigger" id="user-menu-trigger">
+        <span class="username-label">Admin</span>
+        <div class="user-avatar">
+          <i class="bi bi-person-fill user-icon"></i>
+        </div>
+      </div>
+      <ul class="user-dropdown-menu" id="user-dropdown">
+        <li>
+          <button id="nav-logout" class="dropdown-item">
+            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-top-row">
+          <h1>IPRL</h1>
+          <p class="sidebar__subtitle">Control escolar y financiero</p>
+        </div>
+        <nav id="main-nav">
+          <button data-view="dashboard" class="nav-btn active">
+            <i class="bi bi-speedometer2"></i> Últimos pagos
+          </button>
+          <button data-view="alumnos" class="nav-btn">
+            <i class="bi bi-people-fill"></i> Alumnos
+          </button>
+          <button data-view="pagos" class="nav-btn">
+            <i class="bi bi-credit-card-fill"></i> Pagos
+          </button>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <h2 id="view-title">Dashboard</h2>
+        </header>
+        <section id="alerts"></section>
+
+        <div id="view-container"></div>
+      </main>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>

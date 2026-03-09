@@ -1,0 +1,741 @@
+/* ── Portal Alumno – Tema Claro ───────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface2: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --muted: #64748b;
+  --primary: #2563eb;
+  --primary-light: #eff6ff;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --gold: #b45309;
+  --gold-bg: #fef3c7;
+  --font: "Inter", system-ui, sans-serif;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 4px rgba(0, 0, 0, 0.07), 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+
+.portal-wrapper {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+/* ── Header barra superior ────────────────────────────────────────────────── */
+
+.portal-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px;
+  gap: 16px;
+}
+
+.portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.portal-logo {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.portal-title-group h1 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.portal-title-group p {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: var(--font);
+  box-shadow: var(--shadow);
+}
+
+.btn-logout:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+/* ── Tarjeta de perfil ────────────────────────────────────────────────────── */
+
+.profile-card {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 60%, #1e40af 100%);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.25);
+}
+
+.profile-card::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.profile-card::after {
+  content: "";
+  position: absolute;
+  bottom: -60px;
+  right: 60px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.profile-sub {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 20px;
+}
+
+.profile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  backdrop-filter: blur(4px);
+}
+
+.chip--success {
+  background: rgba(255, 255, 255, 0.2);
+}
+.chip--warning {
+  background: rgba(245, 158, 11, 0.3);
+}
+.chip--danger {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* ── Tarjeta HERO de Saldo ────────────────────────────────────────────────── */
+
+.saldo-hero {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.saldo-hero__left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.saldo-hero__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.saldo-hero__amount {
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.saldo-hero__amount--deuda {
+  color: var(--danger);
+}
+.saldo-hero__amount--cero {
+  color: var(--success);
+}
+.saldo-hero__amount--favor {
+  color: var(--primary);
+}
+
+.saldo-hero__note {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.saldo-hero__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* ── Grid de tarjetas de resumen (estatus + semestre) ─────────────────────── */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow);
+}
+
+.summary-card__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summary-card__value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.summary-card__value--green {
+  color: var(--success);
+}
+.summary-card__value--red {
+  color: var(--danger);
+}
+.summary-card__value--gold {
+  color: var(--gold);
+}
+
+/* ── Sección genérica ─────────────────────────────────────────────────────── */
+
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.section-title i {
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.section-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--border);
+  padding: 2px 10px;
+  border-radius: 99px;
+}
+
+.section-body {
+  padding: 20px 22px;
+}
+
+/* ── Tabla de colegiatura ─────────────────────────────────────────────────── */
+
+.colegiatura-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.colegiatura-table th,
+.colegiatura-table td {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.colegiatura-table th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--surface2);
+}
+
+.colegiatura-table tr:last-child td {
+  border-bottom: none;
+}
+
+.colegiatura-table td:first-child {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.colegiatura-table .price-base {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.colegiatura-table .price-final {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.colegiatura-table .beca-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--gold-bg);
+  color: var(--gold);
+  border: 1px solid #fde68a;
+  border-radius: 99px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.no-data {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.88rem;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* ── Feed de pagos (historial) ────────────────────────────────────────────── */
+
+.pagos-feed {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Paginación del historial ─────────────────────────────────────────────── */
+
+.pagos-paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.pag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: var(--font);
+}
+
+.pag-btn:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.pag-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.pag-info {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.pago-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.pago-item:last-child {
+  border-bottom: none;
+}
+
+.pago-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.pago-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pago-concepto {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pago-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pago-monto {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--success);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pago-folio {
+  font-size: 0.72rem;
+  color: var(--gold);
+  display: block;
+  margin-top: 2px;
+  text-align: right;
+}
+
+/* ── Formulario de facturación ────────────────────────────────────────────── */
+
+.fact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.fact-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fact-group.full {
+  grid-column: 1 / -1;
+}
+
+.fact-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fact-group input,
+.fact-group select {
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: var(--font);
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+
+.fact-group input:focus,
+.fact-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.fact-group input::placeholder {
+  color: #94a3b8;
+}
+
+.fact-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-fact-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 22px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition:
+    opacity 0.18s,
+    transform 0.1s;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+
+.btn-fact-save:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ── Badge de estatus ─────────────────────────────────────────────────────── */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.status-badge--corriente {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.status-badge--adeudo {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.status-badge--convenio {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+/* ── Skeleton loader ──────────────────────────────────────────────────────── */
+
+.skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+  color: transparent !important;
+  user-select: none;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Alertas del sistema ──────────────────────────────────────────────────── */
+
+#alerts {
+  margin-bottom: 16px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  animation: fadeIn 0.2s ease;
+}
+
+.alert--success {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid #bbf7d0;
+}
+
+.alert--error {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid #fecaca;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fact-grid {
+    grid-template-columns: 1fr;
+  }
+  .fact-group.full {
+    grid-column: 1;
+  }
+  .profile-name {
+    font-size: 1.2rem;
+  }
+  .portal-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .saldo-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .saldo-hero__amount {
+    font-size: 2rem;
+  }
+  .saldo-hero__right {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

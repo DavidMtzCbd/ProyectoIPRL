@@ -23,7 +23,7 @@ const semestreSchema = new mongoose.Schema(
       required: true,
     },
 
-    inscripción: {
+    inscripcion: {
       type: Number,
       default: 0,
       required: true,
