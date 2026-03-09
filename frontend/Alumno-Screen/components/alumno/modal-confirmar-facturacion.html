@@ -1,0 +1,50 @@
+<div class="modal-overlay" id="modal-confirmar-fact" style="display: none">
+  <div class="modal" style="max-width: 500px">
+    <div class="modal-header">
+      <h2 class="modal-title">Confirmar datos de facturación</h2>
+      <button class="btn-close" onclick="closeModal('modal-confirmar-fact')">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 20px; color: var(--text-color)">
+        Verifica que los datos fiscales sean correctos. Estos serán usados para
+        generar tus facturas automáticamente.
+      </p>
+
+      <div
+        class="resumen-facturacion"
+        style="
+          background: var(--bg-body);
+          padding: 15px;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          line-height: 1.6;
+          margin-bottom: 20px;
+        "
+      >
+        <div><strong>RFC:</strong> <span id="v-rfc"></span></div>
+        <div><strong>Razón Social:</strong> <span id="v-razon"></span></div>
+        <div><strong>Uso de CFDI:</strong> <span id="v-cfdi"></span></div>
+        <div><strong>Régimen Fiscal:</strong> <span id="v-regimen"></span></div>
+        <div>
+          <strong>C.P. (Domicilio):</strong> <span id="v-domicilio"></span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal-footer"
+      style="display: flex; gap: 10px; justify-content: flex-end"
+    >
+      <button
+        class="btn-secondary"
+        onclick="closeModal('modal-confirmar-fact')"
+      >
+        Cancelar
+      </button>
+      <button class="btn-primary" id="btn-confirmar-guardar-fact">
+        Sí, guardar datos
+      </button>
+    </div>
+  </div>
+</div>

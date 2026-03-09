@@ -16,6 +16,8 @@ import {
   loadModals,
 } from "../../../Shared/js/ui.js";
 
+import { appState } from "../../../Shared/js/state.js";
+
 // Helpers de modal
 
 //Función para abrir el modal
@@ -38,6 +40,41 @@ function bindCloseButtons() {
       if (e.target === overlay) overlay.style.display = "none";
     });
   });
+}
+
+// ── Generadores de códigos únicos ──────────────────────────────────────────────
+
+/** Genera la siguiente referencia secuencial: R-0001, R-0002 … R-9999, R-10000 … */
+function generarReferencia(pagosExistentes = []) {
+  // Extrae el número de cada referencia con formato R-XXXX
+  const numeros = pagosExistentes
+    .map((p) => {
+      const match = /^R-(\d+)$/.exec(p.referencia ?? "");
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter((n) => !isNaN(n));
+
+  const siguiente = numeros.length > 0 ? Math.max(...numeros) + 1 : 1;
+
+  // Mínimo 4 dígitos con relleno de ceros; si supera 9999 usa los dígitos necesarios
+  const minDigits = 4;
+  const padded = String(siguiente).padStart(minDigits, "0");
+  return `R-${padded}`;
+}
+
+/** Genera un folio de factura tipo FAC-YYYYMM-XXXXX */
+function generarFolioFactura(pagosExistentes = []) {
+  const hoy = new Date();
+  const mes = hoy.toISOString().slice(0, 7).replace(/-/g, "");
+  const folioSet = new Set(
+    pagosExistentes.map((p) => p.folioFactura).filter(Boolean),
+  );
+  let folio;
+  do {
+    const rand = Math.floor(10000 + Math.random() * 90000);
+    folio = `FAC-${mes}-${rand}`;
+  } while (folioSet.has(folio));
+  return folio;
 }
 
 //  Tabla de pagos
@@ -196,7 +233,9 @@ function initRegistrarPago() {
     document.getElementById("p-fecha").value = new Date()
       .toISOString()
       .slice(0, 10);
-    document.getElementById("p-referencia").value = "R.";
+    // Generar referencia única automáticamente
+    document.getElementById("p-referencia").value =
+      generarReferencia(todosPagos);
     document.getElementById("p-factura").value = "No";
     openModal("modal-registrar-pago");
 
@@ -353,6 +392,10 @@ function initRegistrarPago() {
 
       try {
         const alumno = await getAlumnoByMatricula(matriculaBuscar);
+
+        // Folio de factura: siempre se asigna (independiente del campo "factura")
+        const folioFactura = generarFolioFactura(todosPagos);
+
         const data = {
           alumnoID: alumno._id,
           fechaPago: document.getElementById("p-fecha").value,
@@ -362,10 +405,21 @@ function initRegistrarPago() {
           referencia:
             document.getElementById("p-referencia").value.trim() || undefined,
           factura: document.getElementById("p-factura").value,
+          folioFactura,
         };
         await createPago(data);
         closeModal("modal-registrar-pago");
         showAlert("Pago registrado correctamente ✔", "success");
+
+        // Redirigir al estado de cuenta del alumno registrado
+        appState.alumnoActivo = alumno._id;
+        document
+          .querySelector(".nav-btn[data-view='estadoCuenta']")
+          ?.dispatchEvent(new MouseEvent("click"));
+        document.dispatchEvent(
+          new CustomEvent("navigate", { detail: "estadoCuenta" }),
+        );
+
         await cargarTodosPagos();
       } catch (error) {
         showAlert("Error: " + error.message, "error");

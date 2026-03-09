@@ -15,9 +15,9 @@ const UsuarioSchema = new mongoose.Schema(
 
     googleId: {
       type: String,
-      unique: true,
-      sparse: true, // permite múltiples null sin error de duplicado
       default: null,
+      // No unique: la búsqueda siempre es por googleEmail.
+      // Se actualiza en el primer login con Google.
     },
 
     nombre: {

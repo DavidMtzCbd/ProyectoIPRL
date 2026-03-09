@@ -101,10 +101,35 @@ function mapearPagos(semestre, pagos) {
     }
   });
 
-  return celdas.map((c) => ({
-    ...c,
-    saldoVencido: c.montoPagado - c.esperado,
-  }));
+  // ── Detectar si un mes ya venció ──────────────────────────────────────────
+  // Extraemos el año de inicio del periodo, ej. "2026 Febrero-Julio" → 2026
+  const añoSemestre =
+    parseInt(semestre.periodo, 10) || new Date().getFullYear();
+  const hoy = new Date();
+  const hoyMes = hoy.getMonth(); // 0-11
+  const hoyAño = hoy.getFullYear();
+
+  return celdas.map((c, i) => {
+    // La celda 0 (Inscripción/Reinscripción) siempre se muestra — es al inicio
+    let saldoVencido;
+    if (i === 0) {
+      saldoVencido = c.montoPagado - c.esperado;
+    } else {
+      const mesColumna = cols[i]; // número de mes 0-11
+      // Para semestres pares, el mes 0 (Enero) pertenece al año siguiente
+      const añoColumna =
+        semestre.numSemestre % 2 === 0 && mesColumna === 0
+          ? añoSemestre + 1
+          : añoSemestre;
+
+      const esPasadoOActual =
+        añoColumna < hoyAño || (añoColumna === hoyAño && mesColumna <= hoyMes);
+
+      saldoVencido = esPasadoOActual ? c.montoPagado - c.esperado : 0;
+    }
+
+    return { ...c, saldoVencido };
+  });
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────

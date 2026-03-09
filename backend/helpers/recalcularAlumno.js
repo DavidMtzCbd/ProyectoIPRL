@@ -4,9 +4,9 @@
  * automáticamente cada vez que se registra un pago o se modifica un semestre.
  *
  * Lógica:
- *   totalEsperado = Σ por semestre:
- *     - Sem 1:   inscripcion*(1-beca%) + colegiatura*(1-beca%)*6
- *     - Sem 2+:  reinscripcion*(1-beca%) + colegiatura*(1-beca%)*6
+ *   totalEsperado = Σ por semestre (solo meses ya vencidos al día de hoy):
+ *     - Sem 1:   inscripcion*(1-beca%) + colegiatura*(1-beca%) × mesesVencidos
+ *     - Sem 2+:  reinscripcion*(1-beca%) + colegiatura*(1-beca%) × mesesVencidos
  *   totalPagado = Σ monto de todos los pagos del alumno
  *   saldoActual = totalEsperado - totalPagado
  *     > 0 → El alumno debe dinero   → "Adeudo"
@@ -19,6 +19,40 @@ const Alumno = require("../models/Alumno");
 const Semestre = require("../models/Semestre");
 const Pago = require("../models/Pago");
 
+// Meses de cada tipo de semestre (índices JS: 0=Ene, 1=Feb, …, 11=Dic)
+const MESES_IMPAR = [1, 2, 3, 4, 5, 6]; // Feb–Jul
+const MESES_PAR = [7, 8, 9, 10, 11, 0]; // Ago–Ene (Ene = año +1)
+
+/**
+ * Cuántos meses de colegiatura ya vencieron para un semestre dado,
+ * tomando como referencia la fecha actual.
+ */
+function mesesVencidos(semestre) {
+  const meses = semestre.numSemestre % 2 !== 0 ? MESES_IMPAR : MESES_PAR;
+
+  // Extraer el año de inicio del periodo, ej. "2026 Febrero-Julio" → 2026
+  const añoSemestre =
+    parseInt(semestre.periodo, 10) || new Date().getFullYear();
+
+  const hoy = new Date();
+  const hoyMes = hoy.getMonth();
+  const hoyAño = hoy.getFullYear();
+
+  let count = 0;
+  for (const mes of meses) {
+    // El mes 0 (Enero) en semestres pares pertenece al año siguiente
+    const añoMes =
+      semestre.numSemestre % 2 === 0 && mes === 0
+        ? añoSemestre + 1
+        : añoSemestre;
+
+    const vencido = añoMes < hoyAño || (añoMes === hoyAño && mes <= hoyMes);
+
+    if (vencido) count++;
+  }
+  return count;
+}
+
 async function recalcularAlumno(alumnoId) {
   // Obtener semestres y pagos en paralelo
   const [semestres, pagos] = await Promise.all([
@@ -26,14 +60,14 @@ async function recalcularAlumno(alumnoId) {
     Pago.find({ alumnoID: alumnoId }),
   ]);
 
-  // Calcular total esperado según estructura de cada semestre (7 columnas)
+  // Calcular total esperado solo con los meses ya vencidos
   const totalEsperado = semestres.reduce((acc, s) => {
     const mul = 1 - (s.descuentoPorcentaje ?? 0) / 100;
     const col0 =
       s.numSemestre === 1
         ? (s.inscripcion ?? 0) * mul
         : (s.reinscripcion ?? 0) * mul;
-    const meses = s.colegiaturaMensual * mul * 6; // 6 mensualidades por semestre
+    const meses = s.colegiaturaMensual * mul * mesesVencidos(s);
     return acc + col0 + meses;
   }, 0);
 
