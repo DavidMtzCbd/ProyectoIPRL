@@ -237,6 +237,18 @@ function initRegistrarPago() {
     document.getElementById("p-referencia").value =
       generarReferencia(todosPagos);
     document.getElementById("p-factura").value = "No";
+    
+    // Resetear selector de semestre
+    const selSemestre = document.getElementById("p-semestre-destino");
+    const groupSemestre = document.getElementById("group-semestre-destino");
+    if(selSemestre) {
+        selSemestre.innerHTML = '<option value="">Automático (Mes / Semestre más antiguo)</option>';
+    }
+    if(groupSemestre) {
+        groupSemestre.style.display = 'none';
+    }
+    document.getElementById("p-concepto").value = "";
+
     openModal("modal-registrar-pago");
 
     // Cargar catálogo si aún no está
@@ -316,6 +328,45 @@ function initRegistrarPago() {
 
     try {
       const semestres = await getSemestres(alumno._id);
+      
+      // Llenar selector de semestres (solo mostramos los que tienen deuda)
+      const selSemestre = document.getElementById("p-semestre-destino");
+      if(selSemestre) {
+          selSemestre.innerHTML = '<option value="">Automático (Mes / Semestre más antiguo)</option>';
+          if(semestres && semestres.length > 0) {
+              const semOrdenados = [...semestres].sort((a,b) => a.numSemestre - b.numSemestre);
+              
+              // Simplificaremos la "deuda pasada": Si el semestre es anterior al actual, lo agregamos.
+              // O si el user seleccionó Recuperación de cartera, asumimos que todos los semestres previos
+              // son susceptibles de recuperación.
+              const hoy = new Date();
+              
+              semOrdenados.forEach(s => {
+                  let esPasado = false;
+                  if (s.periodo) {
+                      const anio = parseInt(s.periodo.split(" ")[0]);
+                      if (anio < hoy.getFullYear()) {
+                          esPasado = true;
+                      } else if (anio === hoy.getFullYear()) {
+                          // Aproximación simple: si no es el semestre en curso (el de mayor numSemestre), lo consideramos pasado
+                          if (s.numSemestre < semOrdenados[semOrdenados.length - 1].numSemestre) {
+                              esPasado = true;
+                          }
+                      }
+                  } else {
+                     esPasado = s.numSemestre < semOrdenados[semOrdenados.length - 1].numSemestre;
+                  }
+
+                  if (esPasado) {
+                      const opt = document.createElement("option");
+                      opt.value = s._id;
+                      opt.textContent = `Semestre ${s.numSemestre} — ${s.periodo}`;
+                      selSemestre.appendChild(opt);
+                  }
+              });
+          }
+      }
+
       if (semestres && semestres.length > 0) {
         const sem = semestres.sort((a, b) => b.numSemestre - a.numSemestre)[0];
         const beca = sem.descuentoPorcentaje ?? 0;
@@ -383,6 +434,20 @@ function initRegistrarPago() {
     }, 500);
   });
 
+  // ── Listener para el Concepto ──────────────────────────────────────────────
+  const selectConcepto = document.getElementById("p-concepto");
+  selectConcepto.addEventListener("change", (e) => {
+    const groupSemestre = document.getElementById("group-semestre-destino");
+    if (groupSemestre) {
+        if (e.target.value === "Recuperación de cartera") {
+            groupSemestre.style.display = "block";
+        } else {
+            groupSemestre.style.display = "none";
+            document.getElementById("p-semestre-destino").value = "";
+        }
+    }
+  });
+
   // ── Guardar pago ───────────────────────────────────────────────────────────
   document
     .getElementById("form-registrar-pago")
@@ -407,6 +472,11 @@ function initRegistrarPago() {
           factura: document.getElementById("p-factura").value,
           folioFactura,
         };
+
+        const semestreDestino = document.getElementById("p-semestre-destino")?.value;
+        if(semestreDestino) {
+            data.semestreDestinoID = semestreDestino;
+        }
         await createPago(data);
         closeModal("modal-registrar-pago");
         showAlert("Pago registrado correctamente ✔", "success");

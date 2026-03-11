@@ -91,11 +91,6 @@ function renderTablaAlumnos(alumnos) {
         <button class="btn-sm btn-action btn-ver-alumno" data-id="${a._id}">
           <i class="bi bi-eye-fill"></i> <span class="col-hide-mobile">Ver</span>
         </button>
-        <button class="btn-sm btn-primary btn-editar-alumno" data-id="${a._id}"
-          data-estatus="${a.estatus}" data-saldo="${a.saldoActual}"
-          data-nombre="${a.apellidoPaterno} ${a.apellidoMaterno} ${a.nombre}">
-          <i class="bi bi-pencil-fill"></i> <span class="col-hide-mobile">Editar</span>
-        </button>
       </td>
     </tr>
   `,
@@ -331,7 +326,7 @@ async function abrirDetalleAlumno(id) {
 
 // ── Modal de semestre ─────────────────────────────────────────────────────────
 
-function abrirModalSemestre(semestre = null) {
+export async function abrirModalSemestre(semestre = null, alumnoIdOverride = null) {
   const form = document.getElementById("form-semestre-alumno");
   const title = document.getElementById("semestre-modal-title");
   const submitBtn = document.getElementById("semestre-submit-btn");
@@ -365,9 +360,49 @@ function abrirModalSemestre(semestre = null) {
     submitBtn.innerHTML = '<i class="bi bi-floppy-fill"></i> Guardar semestre';
     document.getElementById("s-id").value = "";
     document.getElementById("s-anio").value = new Date().getFullYear();
+    
+    // Autocompletar precios del último semestre (si existe)
+    const alumnoId = alumnoIdOverride || alumnoDetalleId;
+    if (alumnoId) {
+        try {
+            const semestres = await getSemestres(alumnoId);
+            if (semestres && semestres.length > 0) {
+                // Tomamos el último semestre o el semestre 1 para las colegiaturas base
+                const semBase = semestres.sort((a,b) => a.numSemestre - b.numSemestre)[0];
+                document.getElementById("s-inscripcion").value = semBase.inscripcion ?? 0;
+                document.getElementById("s-reinscripcion").value = semBase.reinscripcion ?? 0;
+                document.getElementById("s-colegiatura").value = semBase.colegiaturaMensual ?? 0;
+                document.getElementById("s-beca").value = semBase.descuentoPorcentaje ?? 0;
+                actualizarPreviewBeca();
+                
+                // Sugerir también el siguiente número de semestre y periodo
+                const ultimoSem = semestres.sort((a,b) => b.numSemestre - a.numSemestre)[0];
+                document.getElementById("s-num").value = ultimoSem.numSemestre + 1;
+                
+                // Intentar inferir el siguiente periodo basado en el último registrado
+                if (ultimoSem.periodo) {
+                    const [anioStr, mesesStr] = ultimoSem.periodo.split(" ");
+                    let anio = parseInt(anioStr) || new Date().getFullYear();
+                    
+                    if (mesesStr === "Febrero-Julio" || mesesStr === "Marzo-Agosto") {
+                        // El siguiente semestre cae en el mismo año, en la segunda mitad
+                        document.getElementById("s-anio").value = anio;
+                        document.getElementById("s-meses").value = mesesStr === "Febrero-Julio" ? "Agosto-Enero" : "Septiembre-Febrero"; // aproximación basada en ciclos de 6 meses
+                    } else if (mesesStr === "Agosto-Enero" || mesesStr === "Septiembre-Febrero") {
+                        // El siguiente semestre cae en el año siguiente, en la primera mitad
+                        document.getElementById("s-anio").value = anio + 1;
+                        document.getElementById("s-meses").value = mesesStr === "Agosto-Enero" ? "Febrero-Julio" : "Marzo-Agosto";
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("No se pudieron cargar los semestres base", e);
+        }
+    }
   }
 
-  document.getElementById("s-alumno-id").value = alumnoDetalleId;
+  document.getElementById("s-alumno-id").value =
+    alumnoIdOverride || alumnoDetalleId;
   openModal("modal-semestre-alumno");
 }
 
@@ -458,6 +493,11 @@ function initSemestre() {
         // Refrescar la sección de semestres en el detalle abierto
         const semestres = await getSemestres(alumnoID);
         renderSemestresEnDetalle(semestres);
+
+        // Avisar a toda la app que un semestre cambió
+        document.dispatchEvent(
+          new CustomEvent("semestreActualizado", { detail: alumnoID }),
+        );
       } catch (error) {
         showAlert("Error: " + error.message, "error");
       }

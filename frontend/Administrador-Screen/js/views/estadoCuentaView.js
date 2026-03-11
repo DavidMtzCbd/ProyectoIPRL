@@ -6,6 +6,23 @@ import {
   updateAlumno,
 } from "../../../Shared/js/api.js";
 import { showAlert, formatMoney, formatDate } from "../../../Shared/js/ui.js";
+import { abrirModalSemestre } from "./alumnosView.js";
+
+// ── Listener Global de Refresco ───────────────────────────────────────────────
+let isSemestreListenerBound = false;
+function bindSemestreListener() {
+  if (isSemestreListenerBound) return;
+  document.addEventListener("semestreActualizado", async (e) => {
+    if (
+      appState.currentView === "estadoCuenta" &&
+      appState.alumnoActivo === e.detail
+    ) {
+      await initEstadoCuenta();
+    }
+  });
+  isSemestreListenerBound = true;
+}
+bindSemestreListener();
 
 // ── Definición de columnas por semestre ───────────────────────────────────────
 //
@@ -71,13 +88,31 @@ function mapearPagos(semestre, pagos) {
     montoPagado: 0,
     fechaPago: null,
     esperado: esperados[i],
+    esCondonacion: false,
   }));
 
-  pagos.forEach((p) => {
+  // Separar pagos: los que van a este semestre explícitamente y los automáticos
+  const pagosParaEsteSemestre = pagos.filter((p) => {
+    if (p.semestreDestinoID) {
+      return p.semestreDestinoID === semestre._id; // Solo entra si es para este semestre
+    }
+    return true; // Si es Automático, entra para ser evaluado
+  });
+
+  pagosParaEsteSemestre.forEach((p) => {
     const concepto = p.concepto ?? "";
     const esColegiatura = concepto.toLowerCase().includes("colegiatura");
     const esInscripcion = concepto === "Inscripción";
     const esReinscripcion = concepto === "Reinscripción";
+
+    if (concepto === "Condonación de deuda") {
+        // Condonación se aplica como un saldo global o en todas las celdas, 
+        // pero la interfaz ya lo calculará a 0 si la suma de pagos es suficiente.
+        // Simularemos un pago a la primera celda
+        celdas[0].montoPagado += p.monto;
+        celdas[0].esCondonacion = true;
+        return;
+    }
 
     if (esInscripcion && semestre.numSemestre === 1) {
       celdas[0].montoPagado += p.monto;
@@ -179,11 +214,14 @@ function renderSemestreTabla(semestre, pagos) {
       .join("");
   }
 
+  const tieneCondonacion = celdas.some(c => c.esCondonacion) || celdas.some(c => c.saldoVencido < -100 && saldoTotal === 0);
+
   return `
   <div class="ec-section">
     <div class="ec-section-header">
       <i class="bi bi-calendar3"></i>
       <span class="ec-sem-title">Semestre ${semestre.numSemestre} &mdash; ${semestre.periodo}</span>
+      ${tieneCondonacion ? '<span class="badge badge--convenio" style="margin-left: 10px; padding: 2px 8px; font-size: 0.75rem;"><i class="bi bi-magic"></i> Condonado</span>' : ''}
     </div>
     <div class="ec-table-wrap">
       <table class="ec-table">
@@ -346,9 +384,58 @@ export async function initEstadoCuenta() {
 
     // Regresar a alumnos
     document.getElementById("ec-back").addEventListener("click", () => {
-      // Disparar navegación a la vista alumnos
       document.querySelector(".nav-btn[data-view='alumnos']")?.click();
     });
+
+    // Botón Registrar semestre
+    document
+      .getElementById("ec-btn-nuevo-semestre")
+      ?.addEventListener("click", () => {
+        abrirModalSemestre(null, alumnoId);
+      });
+      
+    // Botón Condonar Deuda
+    document
+      .getElementById("ec-btn-condonar")
+      ?.addEventListener("click", async () => {
+        if(alumno.saldoActual >= 0) {
+            showAlert("El alumno no tiene deuda que condonar.", "info");
+            return;
+        }
+        
+        const confirmar = confirm(`¿Estás seguro que deseas condonar la deuda total de ${fmt(alumno.saldoActual)}?\n\nEsto actualizará el saldo del alumno a $0.00 y registrará un movimiento de 'Condonación de Deuda'.`);
+        if(!confirmar) return;
+
+        try {
+            // Registrar pago para la condonación (monto positivo porque es deuda negativa)
+            const pagoVal = Math.abs(alumno.saldoActual);
+            
+            // Si quieres asignarlo a un semestre en particular, aquí podrías,
+            // pero lo dejaremos general (Automático = null)
+            const { createPago } = await import("../../../Shared/js/api.js");
+            
+            const numReq = await createPago({
+                alumnoID: alumnoId,
+                fechaPago: new Date().toISOString().slice(0, 10),
+                monto: pagoVal,
+                concepto: 'Condonación de deuda',
+                metodoPago: 'Condonación',
+                factura: 'No'
+            });
+
+            // Actualizar el saldo y estatus en el perfil
+            await updateAlumno(alumnoId, { 
+                estatus: 'Al corriente', 
+                saldoActual: 0 
+            });
+
+            showAlert(`Deuda por ${fmt(pagoVal)} condonada correctamente.`, "success");
+            // Recargar la vista actual
+            await initEstadoCuenta();
+        } catch(error) {
+            showAlert("Error al condonar deuda: " + error.message, "error");
+        }
+      });
   } catch (error) {
     showAlert("Error al cargar Estado de Cuenta: " + error.message, "error");
   }
