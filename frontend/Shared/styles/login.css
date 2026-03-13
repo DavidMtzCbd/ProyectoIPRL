@@ -40,22 +40,10 @@ body {
   margin-bottom: 6px;
 }
 
-.login-logo__circle {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-}
-
-.login-logo__circle span {
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
+.login-logo__img {
+  width: 140px; 
+  max-height: 140px;
+  object-fit: contain;
 }
 
 /* ── Título y subtítulo ─────────────────────────────────────────────────────── */

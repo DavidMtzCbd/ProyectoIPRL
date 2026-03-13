@@ -244,6 +244,27 @@ function renderSemestresEnDetalle(semestres) {
   });
 }
 
+const paginadorPagosAlumno = new Paginator({
+  controlsId: "alumno-pagos-pagination",
+  rowOptions: [5, 10, 15],
+  renderPage: (pagosSlice) => {
+    const rowsPagos = pagosSlice.length
+      ? pagosSlice
+          .map(
+            (p) => `
+          <tr>
+            <td>${formatDate(p.fechaPago)}</td>
+            <td>${p.concepto}</td>
+            <td>${formatMoney(p.monto)}</td>
+            <td>${p.metodoPago}</td>
+          </tr>`,
+          )
+          .join("")
+      : "<tr><td colspan='4'>Sin pagos registrados</td></tr>";
+    fillTable("alumno-pagos-tabla", rowsPagos);
+  }
+});
+
 async function abrirDetalleAlumno(id) {
   alumnoDetalleId = id;
   try {
@@ -286,21 +307,8 @@ async function abrirDetalleAlumno(id) {
     }
 
     // Historial de pagos
-    const rowsPagos = pagos.length
-      ? pagos
-          .map(
-            (p) => `
-          <tr>
-            <td>${formatDate(p.fechaPago)}</td>
-            <td>${p.concepto}</td>
-            <td>${formatMoney(p.monto)}</td>
-            <td>${p.metodoPago}</td>
-          </tr>`,
-          )
-          .join("")
-      : "<tr><td colspan='4'>Sin pagos registrados</td></tr>";
+    paginadorPagosAlumno.setData(pagos);
 
-    fillTable("alumno-pagos-tabla", rowsPagos);
     openModal("modal-detalle-alumno");
 
     // Botón Ver Estado de Cuenta

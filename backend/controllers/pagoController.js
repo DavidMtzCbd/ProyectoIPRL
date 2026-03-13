@@ -7,16 +7,18 @@ const { recalcularAlumno } = require("../helpers/recalcularAlumno");
 exports.crearPago = async (req, res) => {
   try {
     // ── Generar número de movimiento (secuencial global) ──────────────────────
-    const totalPagos = await Pago.countDocuments();
-    const movimiento = totalPagos + 1;
+    const ultimoPago = await Pago.findOne({}, { movimiento: 1 }).sort({ movimiento: -1 });
+    const movimiento = ultimoPago && ultimoPago.movimiento ? ultimoPago.movimiento + 1 : 1;
 
     // ── Generar folio de factura (solo si requiere factura) ────────────────────
     let folioFactura = null;
     if (req.body.factura === "Sí") {
-      const totalFacturas = await Pago.countDocuments({
-        folioFactura: { $ne: null },
-      });
-      const numFolio = totalFacturas + 1;
+      const ultimaFactura = await Pago.findOne({ folioFactura: { $ne: null } }, { folioFactura: 1 }).sort({ folioFactura: -1 });
+      let numFolio = 1;
+      if (ultimaFactura && ultimaFactura.folioFactura) {
+         // Extraer el número del formato F-0001
+         numFolio = parseInt(ultimaFactura.folioFactura.replace('F-', ''), 10) + 1;
+      }
       folioFactura = `F-${String(numFolio).padStart(4, "0")}`;
     }
 
