@@ -20,73 +20,77 @@ let paginaActual = 1;
 
 function renderPagina() {
   const feed = document.getElementById("pagos-feed");
-  if (!feed) return;
+  const template = document.getElementById("pago-item-template");
+  if (!feed || !template) return;
 
   const inicio = (paginaActual - 1) * PAGE_SIZE;
   const fin = inicio + PAGE_SIZE;
   const slice = pagosOrdenados.slice(inicio, fin);
 
-  feed.innerHTML = slice
-    .map((p) => {
-      const icon = CONCEPTO_ICON[p.concepto] ?? "bi-receipt";
-      return `
-      <div class="pago-item">
-        <div class="pago-icon"><i class="bi ${icon}"></i></div>
-        <div class="pago-info">
-          <div class="pago-concepto">${p.concepto}</div>
-          <div class="pago-meta">
-            <span><i class="bi bi-calendar3"></i> ${formatDate(p.fechaPago)}</span>
-            <span><i class="bi bi-credit-card"></i> ${p.metodoPago}</span>
-          </div>
-        </div>
-        <div class="pago-monto">+${formatMoney(p.monto)}</div>
-      </div>`;
-    })
-    .join("");
+  feed.innerHTML = "";
+
+  slice.forEach((p) => {
+    const icon = CONCEPTO_ICON[p.concepto] ?? "bi-receipt";
+    const clone = template.content.cloneNode(true);
+
+    const iconEl = clone.querySelector(".pago-icon i");
+    if (iconEl) iconEl.classList.add(icon);
+
+    const conceptoEl = clone.querySelector(".pago-concepto");
+    if (conceptoEl) conceptoEl.textContent = p.concepto;
+
+    const fechaEl = clone.querySelector(".pago-fecha");
+    if (fechaEl) fechaEl.textContent = formatDate(p.fechaPago);
+
+    const metodoEl = clone.querySelector(".pago-metodo");
+    if (metodoEl) metodoEl.textContent = p.metodoPago;
+
+    const montoEl = clone.querySelector(".pago-monto");
+    if (montoEl) montoEl.textContent = `+${formatMoney(p.monto)}`;
+
+    feed.appendChild(clone);
+  });
 
   renderPaginacion();
 }
 
 function renderPaginacion() {
   const totalPaginas = Math.ceil(pagosOrdenados.length / PAGE_SIZE);
-  let pag = document.getElementById("pagos-paginacion");
+  const pag = document.getElementById("pagos-paginacion");
 
-  if (!pag) {
-    pag = document.createElement("div");
-    pag.id = "pagos-paginacion";
-    pag.className = "pagos-paginacion";
-    document
-      .getElementById("pagos-feed")
-      .insertAdjacentElement("afterend", pag);
-  }
+  if (!pag) return;
 
   if (totalPaginas <= 1) {
-    pag.innerHTML = "";
+    pag.style.display = "none";
     return;
   }
 
-  pag.innerHTML = `
-    <button class="pag-btn" id="pag-prev" ${paginaActual === 1 ? "disabled" : ""}>
-      <i class="bi bi-chevron-left"></i>
-    </button>
-    <span class="pag-info">Página ${paginaActual} de ${totalPaginas}</span>
-    <button class="pag-btn" id="pag-next" ${paginaActual === totalPaginas ? "disabled" : ""}>
-      <i class="bi bi-chevron-right"></i>
-    </button>
-  `;
+  pag.style.display = "flex";
+  
+  const infoText = document.getElementById("pag-info-text");
+  if (infoText) infoText.textContent = `Página ${paginaActual} de ${totalPaginas}`;
 
-  document.getElementById("pag-prev")?.addEventListener("click", () => {
-    if (paginaActual > 1) {
-      paginaActual--;
-      renderPagina();
-    }
-  });
-  document.getElementById("pag-next")?.addEventListener("click", () => {
-    if (paginaActual < totalPaginas) {
-      paginaActual++;
-      renderPagina();
-    }
-  });
+  const btnPrev = document.getElementById("pag-prev");
+  if (btnPrev) {
+    btnPrev.disabled = paginaActual === 1;
+    btnPrev.onclick = () => {
+      if (paginaActual > 1) {
+        paginaActual--;
+        renderPagina();
+      }
+    };
+  }
+
+  const btnNext = document.getElementById("pag-next");
+  if (btnNext) {
+    btnNext.disabled = paginaActual === totalPaginas;
+    btnNext.onclick = () => {
+      if (paginaActual < totalPaginas) {
+        paginaActual++;
+        renderPagina();
+      }
+    };
+  }
 }
 
 export function renderHistorial(pagos) {
@@ -97,7 +101,15 @@ export function renderHistorial(pagos) {
   if (!feed) return;
 
   if (!pagos.length) {
-    feed.innerHTML = `<p class="no-data">Sin pagos registrados</p>`;
+    feed.innerHTML = "";
+    const p = document.createElement("p");
+    p.className = "no-data";
+    p.textContent = "Sin pagos registrados";
+    feed.appendChild(p);
+    
+    // Ocultar paginacion si existe
+    const pag = document.getElementById("pagos-paginacion");
+    if (pag) pag.style.display = "none";
     return;
   }
 

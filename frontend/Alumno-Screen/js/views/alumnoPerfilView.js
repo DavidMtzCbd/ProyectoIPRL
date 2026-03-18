@@ -9,13 +9,14 @@ export function renderPerfil(alumno) {
   const elOferta = document.getElementById("alumno-oferta");
   if (elOferta) elOferta.textContent = alumno.ofertaAcademica;
 
-  const elMat = document.getElementById("alumno-matricula-chip");
+  const elMat = document.getElementById("alumno-matricula-text");
   if (elMat)
-    elMat.innerHTML = `<i class="bi bi-person-badge-fill"></i> Matrícula: ${alumno.matricula}`;
+    elMat.textContent = `Matrícula: ${alumno.matricula}`;
 
   // Estatus chip
   const estatusChip = document.getElementById("alumno-estatus-chip");
-  if (estatusChip) {
+  const estatusChipText = document.getElementById("alumno-estatus-text");
+  if (estatusChip && estatusChipText) {
     const cls =
       alumno.estatus === "Al corriente"
         ? "success"
@@ -23,7 +24,7 @@ export function renderPerfil(alumno) {
           ? "danger"
           : "warning";
     estatusChip.className = `chip chip--${cls}`;
-    estatusChip.innerHTML = `<i class="bi bi-circle-fill" style="font-size:.5rem"></i> ${alumno.estatus}`;
+    estatusChipText.textContent = alumno.estatus;
   }
 
   // Tarjeta hero de saldo
@@ -51,7 +52,8 @@ export function renderPerfil(alumno) {
   }
 
   const estatusBadge = document.getElementById("card-estatus");
-  if (estatusBadge) {
+  const estatusBadgeText = document.getElementById("card-estatus-text");
+  if (estatusBadge && estatusBadgeText) {
     const clsBadge =
       alumno.estatus === "Al corriente"
         ? "corriente"
@@ -59,7 +61,7 @@ export function renderPerfil(alumno) {
           ? "adeudo"
           : "convenio";
     estatusBadge.className = `status-badge status-badge--${clsBadge}`;
-    estatusBadge.innerHTML = `<i class="bi bi-circle-fill" style="font-size:.5rem"></i> ${alumno.estatus}`;
+    estatusBadgeText.textContent = alumno.estatus;
   }
   // Oferta educativa en la tarjeta del grid
   const cardOferta = document.getElementById("card-oferta");

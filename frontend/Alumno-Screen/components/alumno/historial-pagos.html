@@ -21,5 +21,29 @@
     <div class="pagos-feed" id="pagos-feed">
       <p class="no-data">Cargando historial…</p>
     </div>
+    <div id="pagos-paginacion" class="pagos-paginacion" style="display: none;">
+      <button class="pag-btn" id="pag-prev">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <span class="pag-info" id="pag-info-text"></span>
+      <button class="pag-btn" id="pag-next">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
   </div>
 </div>
+
+<!-- Template para un item de pago -->
+<template id="pago-item-template">
+  <div class="pago-item">
+    <div class="pago-icon"><i class="bi"></i></div>
+    <div class="pago-info">
+      <div class="pago-concepto"></div>
+      <div class="pago-meta">
+        <span><i class="bi bi-calendar3"></i> <span class="pago-fecha"></span></span>
+        <span><i class="bi bi-credit-card"></i> <span class="pago-metodo"></span></span>
+      </div>
+    </div>
+    <div class="pago-monto"></div>
+  </div>
+</template>

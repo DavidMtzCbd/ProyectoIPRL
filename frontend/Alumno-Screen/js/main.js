@@ -105,10 +105,10 @@ async function guardarFacturacion() {
 
     // 1. Mostrar pantalla de éxito DENTRO del modal
     modalContent.innerHTML = `
-      <div style="padding: 40px 20px; text-align: center;">
-        <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: var(--success); margin-bottom: 15px; display: inline-block;"></i>
-        <h2 style="margin-bottom: 10px;">¡Datos guardados!</h2>
-        <p style="color: var(--muted);">Tu información fiscal ha sido actualizada correctamente.</p>
+      <div class="fact-success-container">
+        <i class="bi bi-check-circle-fill fact-success-icon"></i>
+        <h2 class="fact-success-title">¡Datos guardados!</h2>
+        <p class="fact-success-text">Tu información fiscal ha sido actualizada correctamente.</p>
       </div>
     `;
 

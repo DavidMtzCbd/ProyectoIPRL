@@ -840,3 +840,25 @@ body {
   cursor: pointer;
   font-weight: 500;
 }
+
+/* ── Estilos extraídos de alumno.js (feedback facturación) ────────── */
+
+.fact-success-container {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.fact-success-icon {
+  font-size: 4rem;
+  color: var(--success);
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.fact-success-title {
+  margin-bottom: 10px;
+}
+
+.fact-success-text {
+  color: var(--muted);
+}

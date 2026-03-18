@@ -192,7 +192,7 @@ function renderSemestresEnDetalle(semestres) {
   if (!container) return;
 
   if (!semestres.length) {
-    container.innerHTML = `<p style="color:var(--muted);font-style:italic;font-size:.85rem;">Sin semestres registrados.</p>`;
+    container.innerHTML = `<p class="semestres-lista-vacio">Sin semestres registrados.</p>`;
     return;
   }
 
@@ -200,29 +200,28 @@ function renderSemestresEnDetalle(semestres) {
     .map((s) => {
       const beca =
         s.descuentoPorcentaje > 0
-          ? `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde68a;border-radius:99px;padding:1px 8px;font-size:.75rem;font-weight:700;">Beca ${s.descuentoPorcentaje}%</span>`
-          : `<span style="color:#94a3b8;font-size:.78rem;">Sin beca</span>`;
+          ? `<span class="semestre-badge-beca-aplicada">Beca ${s.descuentoPorcentaje}%</span>`
+          : `<span class="semestre-badge-sin-beca">Sin beca</span>`;
 
       return `
-    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
-      <div style="flex:1;">
-        <strong style="font-size:.88rem;">Sem. ${s.numSemestre} — ${s.periodo}</strong>
-        <div style="font-size:.78rem;color:var(--muted);margin-top:2px;">
+    <div class="semestre-item">
+      <div class="semestre-item-info">
+        <strong class="semestre-item-titulo">Sem. ${s.numSemestre} — ${s.periodo}</strong>
+        <div class="semestre-item-detalles">
           Inscripción: ${fmt(s.inscripcion)}
           · Reinscripción: ${fmt(s.reinscripcion)}
           · Colegiatura: ${fmt(s.colegiaturaMensual)}
         </div>
       </div>
       ${beca}
-      <button class="btn-sm btn-primary btn-editar-semestre"
+      <button class="btn-sm btn-primary btn-editar-semestre semestre-btn-editar"
         data-sid="${s._id}"
         data-num="${s.numSemestre}"
         data-periodo="${s.periodo}"
         data-inscripcion="${s.inscripcion ?? 0}"
         data-reinscripcion="${s.reinscripcion ?? 0}"
         data-colegiatura="${s.colegiaturaMensual ?? 0}"
-        data-beca="${s.descuentoPorcentaje ?? 0}"
-        style="white-space:nowrap;">
+        data-beca="${s.descuentoPorcentaje ?? 0}">
         <i class="bi bi-pencil-fill"></i> Editar
       </button>
     </div>`;
@@ -341,7 +340,8 @@ export async function abrirModalSemestre(semestre = null, alumnoIdOverride = nul
   if (!form) return;
 
   form.reset();
-  document.getElementById("semestre-preview").style.display = "none";
+  document.getElementById("semestre-preview").classList.add("semestre-preview-hidden");
+  document.getElementById("semestre-preview").classList.remove("semestre-preview-visible");
   document.getElementById("s-recurso").checked = false;
 
   if (semestre) {
@@ -426,9 +426,11 @@ function actualizarPreviewBeca() {
     document.getElementById("prev-insc").textContent = fmt(insc * mul);
     document.getElementById("prev-reinsc").textContent = fmt(reinsc * mul);
     document.getElementById("prev-cole").textContent = fmt(cole * mul);
-    preview.style.display = "block";
+    preview.classList.add("semestre-preview-visible");
+    preview.classList.remove("semestre-preview-hidden");
   } else {
-    preview.style.display = "none";
+    preview.classList.add("semestre-preview-hidden");
+    preview.classList.remove("semestre-preview-visible");
   }
 }
 

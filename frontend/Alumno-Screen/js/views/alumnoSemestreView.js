@@ -23,10 +23,8 @@ export function renderSemestre(semestres) {
   const reinscBase = sem.reinscripcion ?? 0;
   const colBase = sem.colegiaturaMensual ?? 0;
 
-  const becaPill =
-    descuento > 0
-      ? `<span class="beca-pill"><i class="bi bi-stars"></i> ${descuento}% beca</span>`
-      : `<span style="color:var(--muted);font-size:.8rem">Sin beca</span>`;
+  const template = document.getElementById("semestre-row-template");
+  if (!template) return;
 
   const rows = [
     {
@@ -46,15 +44,33 @@ export function renderSemestre(semestres) {
     },
   ];
 
-  tbody.innerHTML = rows
-    .map(
-      (r) => `
-    <tr>
-      <td>${r.concepto}</td>
-      <td class="price-base">${formatMoney(r.base)}</td>
-      <td>${becaPill}</td>
-      <td class="price-final">${formatMoney(r.final)}</td>
-    </tr>`,
-    )
-    .join("");
+  tbody.innerHTML = "";
+
+  rows.forEach(r => {
+    const clone = template.content.cloneNode(true);
+    
+    const conceptoEl = clone.querySelector('.sem-concepto');
+    if (conceptoEl) conceptoEl.textContent = r.concepto;
+    
+    const baseEl = clone.querySelector('.sem-base');
+    if (baseEl) baseEl.textContent = formatMoney(r.base);
+    
+    const becaPill = clone.querySelector('.beca-pill');
+    const sinBeca = clone.querySelector('.sin-beca');
+    const becaPct = clone.querySelector('.beca-pct');
+    
+    if (descuento > 0) {
+      if (becaPill) {
+        becaPill.style.display = '';
+        if (becaPct) becaPct.textContent = descuento;
+      }
+    } else {
+      if (sinBeca) sinBeca.style.display = '';
+    }
+    
+    const finalEl = clone.querySelector('.sem-final');
+    if (finalEl) finalEl.textContent = formatMoney(r.final);
+    
+    tbody.appendChild(clone);
+  });
 }
