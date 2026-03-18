@@ -163,6 +163,24 @@ export class Paginator {
   }
 }
 
+// ── Manejo de Modales ─────────────────────────────────────────────────────────
+
+export function openModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.style.display = "flex";
+  } else {
+    console.error(`Modal no encontrado: ${id}`);
+  }
+}
+
+export function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
 // ── Cargador de modales como componentes ──────────────────────────────────────
 
 /**

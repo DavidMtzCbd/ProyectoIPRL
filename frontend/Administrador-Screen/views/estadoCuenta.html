@@ -2,10 +2,15 @@
 <link rel="stylesheet" href="./styles/views/estadoCuenta.css" />
 
 <div class="ec-wrapper">
-  <!-- Botón regresar -->
-  <button class="ec-back-btn" id="ec-back">
-    <i class="bi bi-arrow-left"></i> Regresar a Alumnos
-  </button>
+  <!-- Barra de acciones superior -->
+  <div class="ec-topbar">
+    <button class="ec-back-btn" id="ec-back">
+      <i class="bi bi-arrow-left"></i> Regresar a Alumnos
+    </button>
+    <button class="btn-sm btn-warning" id="ec-btn-condonar" style="margin-left: auto;">
+      <i class="bi bi-magic"></i> Condonar Deuda
+    </button>
+  </div>
 
   <!-- Header del alumno -->
   <div class="ec-header" id="ec-header">
@@ -19,6 +24,14 @@
       <div id="ec-beca-badge"></div>
       <div class="ec-saldo" id="ec-saldo"></div>
     </div>
+  </div>
+
+  <!-- Semestres Header -->
+  <div class="ec-semestres-header">
+    <h3 class="ec-semestres-title">Semestres</h3>
+    <button class="btn-sm btn-success" id="ec-btn-nuevo-semestre">
+      <i class="bi bi-plus-circle-fill"></i> Registrar semestre
+    </button>
   </div>
 
   <!-- Semestres (se generan dinámicamente) -->

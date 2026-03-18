@@ -19,16 +19,40 @@
               required
               placeholder="Ej. 1"
             />
+            <label class="s-recurso-label">
+              <input type="checkbox" id="s-recurso" class="s-recurso-check" />
+              Es repetidor
+              <span class="s-recurso-hint">(recurso del mismo semestre)</span>
+            </label>
           </div>
           <div class="form-group">
-            <label for="s-periodo">Periodo</label>
-            <input
-              id="s-periodo"
-              type="text"
-              required
-              placeholder="Ej. 2024-A"
-            />
+            <label>Periodo</label>
+            <div class="periodo-row">
+              <div class="periodo-sub-group">
+                <span class="periodo-sublabel">Año</span>
+                <input
+                  id="s-anio"
+                  type="number"
+                  min="2000"
+                  max="2100"
+                  required
+                  placeholder="2026"
+                  class="s-anio-input"
+                />
+              </div>
+              <div class="periodo-sub-group">
+                <span class="periodo-sublabel">Meses</span>
+                <select id="s-meses" required class="s-meses-select">
+                  <option value="" disabled selected>
+                    Seleccionar período
+                  </option>
+                  <option value="Febrero-Julio">Febrero – Julio</option>
+                  <option value="Agosto-Enero">Agosto – Enero</option>
+                </select>
+              </div>
+            </div>
           </div>
+
           <div class="form-group">
             <label for="s-inscripcion">Inscripción base ($)</label>
             <input
@@ -76,35 +100,11 @@
           </div>
         </div>
         <!-- Preview de precios con beca -->
-        <div
-          id="semestre-preview"
-          style="
-            margin-top: 14px;
-            padding: 12px 14px;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 9px;
-            display: none;
-          "
-        >
-          <p
-            style="
-              font-size: 0.8rem;
-              font-weight: 700;
-              color: #15803d;
-              margin-bottom: 8px;
-            "
-          >
+        <div id="semestre-preview" class="semestre-preview">
+          <p class="semestre-preview__title">
             <i class="bi bi-stars"></i> Vista previa con beca aplicada
           </p>
-          <div
-            style="
-              display: flex;
-              gap: 16px;
-              flex-wrap: wrap;
-              font-size: 0.85rem;
-            "
-          >
+          <div class="semestre-preview__values">
             <span>Inscripción: <strong id="prev-insc">—</strong></span>
             <span>Reinscripción: <strong id="prev-reinsc">—</strong></span>
             <span>Colegiatura: <strong id="prev-cole">—</strong></span>

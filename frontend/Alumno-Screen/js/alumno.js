@@ -5,7 +5,7 @@ import {
   getAlumnoPagos,
   updateAlumno,
 } from "../../Shared/js/api.js";
-import { showAlert } from "../../Shared/js/ui.js";
+import { showAlert, openModal, closeModal } from "../../Shared/js/ui.js";
 import { initSessionMonitor } from "../../Shared/js/sessionMonitor.js";
 import { initLogout } from "../../Shared/js/logout.js";
 
@@ -15,6 +15,9 @@ import { renderSemestre } from "./views/alumnoSemestreView.js";
 import { renderHistorial } from "./views/alumnoPagosView.js";
 
 let alumnoData = null;
+
+// Exponer closeModal al objeto global para que los onclick en el HTML funcionen
+window.closeModal = closeModal;
 
 // ── Carga de Componentes HTML ─────────────────────────────────────────────────
 
@@ -38,13 +41,55 @@ async function loadPortalComponents() {
       "comp-facturacion",
       "components/alumno/formulario-facturacion.html",
     ),
+    renderComponent(
+      "comp-modals-fact",
+      "components/alumno/modal-confirmar-facturacion.html",
+    ),
   ]);
 }
 
 // ── Facturación ───────────────────────────────────────────────────────────────
 
+function abrirModalConfirmarFacturacion() {
+  if (!alumnoData) return;
+
+  // Llenar datos en el modal
+  const rfc =
+    document.getElementById("f-rfc").value.trim().toUpperCase() || "—";
+  const razon = document.getElementById("f-razon").value.trim() || "—";
+
+  const cfdiEl = document.getElementById("f-cfdi");
+  const cfdi = cfdiEl.options[cfdiEl.selectedIndex]?.text || "—";
+
+  const regimenEl = document.getElementById("f-regimen");
+  const regimen = regimenEl.options[regimenEl.selectedIndex]?.text || "—";
+
+  const domicilio = document.getElementById("f-domicilio").value.trim() || "—";
+
+  document.getElementById("v-rfc").textContent = rfc;
+  document.getElementById("v-razon").textContent = razon;
+  document.getElementById("v-cfdi").textContent = cfdi;
+  document.getElementById("v-regimen").textContent = regimen;
+  document.getElementById("v-domicilio").textContent = domicilio;
+
+  openModal("modal-confirmar-fact");
+}
+
 async function guardarFacturacion() {
   if (!alumnoData) return;
+
+  const btn = document.getElementById("btn-confirmar-guardar-fact");
+  const modalContent = document.querySelector("#modal-confirmar-fact .modal");
+
+  if (!btn || !modalContent) return;
+
+  // Guardamos el HTML original del modal por si el usuario lo vuelve a abrir después
+  const originalModalHTML = modalContent.innerHTML;
+
+  const originalText = btn.innerHTML;
+  btn.innerHTML = `<i class="bi bi-hourglass-split"></i> Guardando...`;
+  btn.disabled = true;
+
   const payload = {
     rfc: document.getElementById("f-rfc").value.trim().toUpperCase() || null,
     razonSocial: document.getElementById("f-razon").value.trim() || null,
@@ -57,9 +102,36 @@ async function guardarFacturacion() {
   try {
     const updated = await updateAlumno(alumnoData._id, payload);
     alumnoData = updated;
-    showAlert("Datos de facturación guardados correctamente ✔", "success");
+
+    // 1. Mostrar pantalla de éxito DENTRO del modal
+    modalContent.innerHTML = `
+      <div style="padding: 40px 20px; text-align: center;">
+        <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: var(--success); margin-bottom: 15px; display: inline-block;"></i>
+        <h2 style="margin-bottom: 10px;">¡Datos guardados!</h2>
+        <p style="color: var(--muted);">Tu información fiscal ha sido actualizada correctamente.</p>
+      </div>
+    `;
+
+    // 2. Esperar 2 segundos para que el usuario lo lea
+    setTimeout(() => {
+      closeModal("modal-confirmar-fact");
+      // Restaurar el HTML original por si el usuario vuelve a darle click a guardar
+      setTimeout(() => {
+        modalContent.innerHTML = originalModalHTML;
+        // Restaurar botón (ya que lo reescribimos)
+        const btnRedo = document.getElementById("btn-confirmar-guardar-fact");
+        if (btnRedo) {
+          btnRedo.innerHTML = originalText;
+          btnRedo.disabled = false;
+          // Hay que volver a atar el evento click porque se destruyó al hacer innerHTML
+          btnRedo.addEventListener("click", guardarFacturacion);
+        }
+      }, 300); // 300ms de gracia mientras termina la animación de cierre
+    }, 2000);
   } catch (error) {
     showAlert("Error al guardar: " + error.message, "error");
+    btn.innerHTML = originalText;
+    btn.disabled = false;
   }
 }
 
@@ -103,7 +175,13 @@ async function bootstrap() {
     // 5. Escuchar eventos UI
     const btnGuardarFact = document.getElementById("btn-guardar-fact");
     if (btnGuardarFact)
-      btnGuardarFact.addEventListener("click", guardarFacturacion);
+      btnGuardarFact.addEventListener("click", abrirModalConfirmarFacturacion);
+
+    const btnConfirmarFact = document.getElementById(
+      "btn-confirmar-guardar-fact",
+    );
+    if (btnConfirmarFact)
+      btnConfirmarFact.addEventListener("click", guardarFacturacion);
   } catch (error) {
     // Token expirado o inválido
     console.error("Bootstrap error:", error);

@@ -6,6 +6,7 @@ el manejo de la logica de negocio relacionada a los alumnos.
 const Alumno = require("../models/Alumno");
 const Pago = require("../models/Pago");
 const Semestre = require("../models/Semestre");
+const Usuario = require("../models/Usuario");
 
 const { logger } = require("../config/logger");
 
@@ -40,15 +41,37 @@ exports.getAlumnoByMatricula = async (req, res) => {
   }
 };
 
-//Controlador que crea un nuevo alumno a partir de los datos enviados en el cuerpo de la solicitud.
+//Controlador que crea un nuevo alumno Y su cuenta de usuario en un solo paso.
+// Si la creación del Usuario falla, elimina el Alumno (rollback manual).
 exports.createAlumno = async (req, res) => {
+  const { googleEmail, ...alumnoData } = req.body;
+
+  if (!googleEmail) {
+    return res.status(400).json({ message: "El correo de Gmail es requerido" });
+  }
+
+  let nuevoAlumno = null;
   try {
-    const alumno = new Alumno(req.body);
-    const nuevoAlumno = await alumno.save();
+    // 1. Crear el Alumno
+    const alumno = new Alumno({ ...alumnoData, correo: googleEmail });
+    nuevoAlumno = await alumno.save();
     logger.info("Alumno creado: " + nuevoAlumno.nombre);
+
+    // 2. Crear el Usuario vinculado
+    await Usuario.create({
+      googleEmail: googleEmail.toLowerCase(),
+      nombre: `${alumnoData.nombre} ${alumnoData.apellidoPaterno}`,
+      rol: "alumno",
+      alumno: nuevoAlumno._id,
+    });
+
     res.status(201).json(nuevoAlumno);
   } catch (error) {
-    logger.error("Error al crear alumno", error);
+    // Rollback: si el alumno se creó pero el usuario falló, eliminar el alumno
+    if (nuevoAlumno) {
+      await Alumno.findByIdAndDelete(nuevoAlumno._id).catch(() => {});
+    }
+    logger.error("Error al crear alumno/usuario", error);
     res.status(400).json({ message: error.message });
   }
 };

@@ -91,11 +91,6 @@ function renderTablaAlumnos(alumnos) {
         <button class="btn-sm btn-action btn-ver-alumno" data-id="${a._id}">
           <i class="bi bi-eye-fill"></i> <span class="col-hide-mobile">Ver</span>
         </button>
-        <button class="btn-sm btn-primary btn-editar-alumno" data-id="${a._id}"
-          data-estatus="${a.estatus}" data-saldo="${a.saldoActual}"
-          data-nombre="${a.apellidoPaterno} ${a.apellidoMaterno} ${a.nombre}">
-          <i class="bi bi-pencil-fill"></i> <span class="col-hide-mobile">Editar</span>
-        </button>
       </td>
     </tr>
   `,
@@ -249,6 +244,27 @@ function renderSemestresEnDetalle(semestres) {
   });
 }
 
+const paginadorPagosAlumno = new Paginator({
+  controlsId: "alumno-pagos-pagination",
+  rowOptions: [5, 10, 15],
+  renderPage: (pagosSlice) => {
+    const rowsPagos = pagosSlice.length
+      ? pagosSlice
+          .map(
+            (p) => `
+          <tr>
+            <td>${formatDate(p.fechaPago)}</td>
+            <td>${p.concepto}</td>
+            <td>${formatMoney(p.monto)}</td>
+            <td>${p.metodoPago}</td>
+          </tr>`,
+          )
+          .join("")
+      : "<tr><td colspan='4'>Sin pagos registrados</td></tr>";
+    fillTable("alumno-pagos-tabla", rowsPagos);
+  }
+});
+
 async function abrirDetalleAlumno(id) {
   alumnoDetalleId = id;
   try {
@@ -284,25 +300,15 @@ async function abrirDetalleAlumno(id) {
     // Botón agregar semestre
     const btnNuevoSem = document.getElementById("btn-nuevo-semestre");
     if (btnNuevoSem) {
-      btnNuevoSem.onclick = () => abrirModalSemestre(null);
+      btnNuevoSem.onclick = () => {
+        closeModal("modal-detalle-alumno");
+        abrirModalSemestre(null);
+      };
     }
 
     // Historial de pagos
-    const rowsPagos = pagos.length
-      ? pagos
-          .map(
-            (p) => `
-          <tr>
-            <td>${formatDate(p.fechaPago)}</td>
-            <td>${p.concepto}</td>
-            <td>${formatMoney(p.monto)}</td>
-            <td>${p.metodoPago}</td>
-          </tr>`,
-          )
-          .join("")
-      : "<tr><td colspan='4'>Sin pagos registrados</td></tr>";
+    paginadorPagosAlumno.setData(pagos);
 
-    fillTable("alumno-pagos-tabla", rowsPagos);
     openModal("modal-detalle-alumno");
 
     // Botón Ver Estado de Cuenta
@@ -328,7 +334,7 @@ async function abrirDetalleAlumno(id) {
 
 // ── Modal de semestre ─────────────────────────────────────────────────────────
 
-function abrirModalSemestre(semestre = null) {
+export async function abrirModalSemestre(semestre = null, alumnoIdOverride = null) {
   const form = document.getElementById("form-semestre-alumno");
   const title = document.getElementById("semestre-modal-title");
   const submitBtn = document.getElementById("semestre-submit-btn");
@@ -336,6 +342,7 @@ function abrirModalSemestre(semestre = null) {
 
   form.reset();
   document.getElementById("semestre-preview").style.display = "none";
+  document.getElementById("s-recurso").checked = false;
 
   if (semestre) {
     // Modo edición
@@ -343,7 +350,12 @@ function abrirModalSemestre(semestre = null) {
     submitBtn.innerHTML = '<i class="bi bi-floppy-fill"></i> Guardar cambios';
     document.getElementById("s-id").value = semestre._id;
     document.getElementById("s-num").value = semestre.numSemestre;
-    document.getElementById("s-periodo").value = semestre.periodo;
+
+    // Parsear el periodo guardado, ej. "2026 Febrero-Julio" → año + meses
+    const [anio, meses] = (semestre.periodo || "").split(" ");
+    document.getElementById("s-anio").value = anio || "";
+    document.getElementById("s-meses").value = meses || "";
+
     document.getElementById("s-inscripcion").value = semestre.inscripcion;
     document.getElementById("s-reinscripcion").value = semestre.reinscripcion;
     document.getElementById("s-colegiatura").value =
@@ -351,13 +363,54 @@ function abrirModalSemestre(semestre = null) {
     document.getElementById("s-beca").value = semestre.descuentoPorcentaje;
     actualizarPreviewBeca();
   } else {
-    // Modo creación
+    // Modo creación — sugerir año actual
     title.textContent = "Registrar nuevo semestre";
     submitBtn.innerHTML = '<i class="bi bi-floppy-fill"></i> Guardar semestre';
     document.getElementById("s-id").value = "";
+    document.getElementById("s-anio").value = new Date().getFullYear();
+    
+    // Autocompletar precios del último semestre (si existe)
+    const alumnoId = alumnoIdOverride || alumnoDetalleId;
+    if (alumnoId) {
+        try {
+            const semestres = await getSemestres(alumnoId);
+            if (semestres && semestres.length > 0) {
+                // Tomamos el último semestre o el semestre 1 para las colegiaturas base
+                const semBase = semestres.sort((a,b) => a.numSemestre - b.numSemestre)[0];
+                document.getElementById("s-inscripcion").value = semBase.inscripcion ?? 0;
+                document.getElementById("s-reinscripcion").value = semBase.reinscripcion ?? 0;
+                document.getElementById("s-colegiatura").value = semBase.colegiaturaMensual ?? 0;
+                document.getElementById("s-beca").value = semBase.descuentoPorcentaje ?? 0;
+                actualizarPreviewBeca();
+                
+                // Sugerir también el siguiente número de semestre y periodo
+                const ultimoSem = semestres.sort((a,b) => b.numSemestre - a.numSemestre)[0];
+                document.getElementById("s-num").value = ultimoSem.numSemestre + 1;
+                
+                // Intentar inferir el siguiente periodo basado en el último registrado
+                if (ultimoSem.periodo) {
+                    const [anioStr, mesesStr] = ultimoSem.periodo.split(" ");
+                    let anio = parseInt(anioStr) || new Date().getFullYear();
+                    
+                    if (mesesStr === "Febrero-Julio" || mesesStr === "Marzo-Agosto") {
+                        // El siguiente semestre cae en el mismo año, en la segunda mitad
+                        document.getElementById("s-anio").value = anio;
+                        document.getElementById("s-meses").value = mesesStr === "Febrero-Julio" ? "Agosto-Enero" : "Septiembre-Febrero"; // aproximación basada en ciclos de 6 meses
+                    } else if (mesesStr === "Agosto-Enero" || mesesStr === "Septiembre-Febrero") {
+                        // El siguiente semestre cae en el año siguiente, en la primera mitad
+                        document.getElementById("s-anio").value = anio + 1;
+                        document.getElementById("s-meses").value = mesesStr === "Agosto-Enero" ? "Febrero-Julio" : "Marzo-Agosto";
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("No se pudieron cargar los semestres base", e);
+        }
+    }
   }
 
-  document.getElementById("s-alumno-id").value = alumnoDetalleId;
+  document.getElementById("s-alumno-id").value =
+    alumnoIdOverride || alumnoDetalleId;
   openModal("modal-semestre-alumno");
 }
 
@@ -395,11 +448,39 @@ function initSemestre() {
       e.preventDefault();
       const sId = document.getElementById("s-id").value;
       const alumnoID = document.getElementById("s-alumno-id").value;
+      const numSemestre = Number(document.getElementById("s-num").value);
+      const esRecurso = document.getElementById("s-recurso").checked;
+
+      // Construir el campo periodo a partir de año + selección de meses
+      const anio = document.getElementById("s-anio").value.trim();
+      const meses = document.getElementById("s-meses").value;
+      if (!anio || !meses) {
+        showAlert("Indica el año y el periodo de meses.", "error");
+        return;
+      }
+      const periodo = `${anio} ${meses}`;
+
+      // Validar que el número de semestre no se repita (salvo si es recurso)
+      if (!sId && !esRecurso) {
+        const semestresExistentes = await getSemestres(alumnoID).catch(
+          () => [],
+        );
+        const duplicado = semestresExistentes.some(
+          (s) => s.numSemestre === numSemestre,
+        );
+        if (duplicado) {
+          showAlert(
+            `El Semestre ${numSemestre} ya está registrado. Si es repetidor, activa la casilla 'Es repetidor'.`,
+            "error",
+          );
+          return;
+        }
+      }
 
       const data = {
         alumnoID,
-        numSemestre: Number(document.getElementById("s-num").value),
-        periodo: document.getElementById("s-periodo").value.trim(),
+        numSemestre,
+        periodo,
         inscripcion: Number(document.getElementById("s-inscripcion").value),
         reinscripcion: Number(document.getElementById("s-reinscripcion").value),
         colegiaturaMensual: Number(
@@ -420,6 +501,11 @@ function initSemestre() {
         // Refrescar la sección de semestres en el detalle abierto
         const semestres = await getSemestres(alumnoID);
         renderSemestresEnDetalle(semestres);
+
+        // Avisar a toda la app que un semestre cambió
+        document.dispatchEvent(
+          new CustomEvent("semestreActualizado", { detail: alumnoID }),
+        );
       } catch (error) {
         showAlert("Error: " + error.message, "error");
       }
@@ -440,40 +526,17 @@ function initAgregarAlumno() {
       e.preventDefault();
       const gmail = document.getElementById("a-correo").value.trim();
       const alumnoData = {
+        googleEmail: gmail, // el backend usará esto para el correo y el Usuario
         nombre: document.getElementById("a-nombre").value.trim(),
         apellidoPaterno: document.getElementById("a-ap").value.trim(),
         apellidoMaterno: document.getElementById("a-am").value.trim(),
         matricula: Number(document.getElementById("a-matricula").value),
-        correo: document.getElementById("a-correo").value.trim(),
         ofertaAcademica: document.getElementById("a-oferta").value.trim(),
         estatus: document.getElementById("a-estatus").value,
       };
 
       try {
-        // 1. Crear el registro de Alumno
-        const nuevoAlumno = await createAlumno(alumnoData);
-
-        // 2. Crear el Usuario vinculado al Gmail para que pueda iniciar sesión
-        try {
-          await fetch("http://localhost:3000/api/auth/registro", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${appState.token}`,
-            },
-            body: JSON.stringify({
-              googleEmail: gmail,
-              rol: "alumno",
-              alumno: nuevoAlumno._id,
-            }),
-          });
-        } catch {
-          showAlert(
-            `Alumno creado, pero hubo un error al registrar la cuenta de Gmail (${gmail}). Verifica que no esté ya registrado.`,
-            "error",
-          );
-        }
-
+        await createAlumno(alumnoData);
         closeModal("modal-agregar-alumno");
         showAlert(`Alumno registrado ✔ — Gmail vinculado: ${gmail}`, "success");
         await cargarAlumnos();

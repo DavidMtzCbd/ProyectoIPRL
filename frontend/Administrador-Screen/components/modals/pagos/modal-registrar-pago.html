@@ -58,6 +58,12 @@
               <option value="Transferencia">Transferencia</option>
             </select>
           </div>
+          <div class="form-group" id="group-semestre-destino" style="display: none;">
+            <label for="p-semestre-destino">Aplicar a semestre</label>
+            <select id="p-semestre-destino">
+              <option value="">Automático (Mes / Semestre más antiguo)</option>
+            </select>
+          </div>
           <div class="form-group">
             <label for="p-concepto">Concepto</label>
             <select id="p-concepto" required>
@@ -82,8 +88,8 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="p-referencia">Referencia</label>
-            <input id="p-referencia" type="text" placeholder="R.000000" />
+            <label for="p-referencia"> Referencia (auto-generada) </label>
+            <input id="p-referencia" type="text" placeholder="R-000000" />
           </div>
           <div class="form-group">
             <label for="p-factura">¿Requiere factura?</label>
