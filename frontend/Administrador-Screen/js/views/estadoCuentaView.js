@@ -221,7 +221,7 @@ function renderSemestreTabla(semestre, pagos) {
     <div class="ec-section-header">
       <i class="bi bi-calendar3"></i>
       <span class="ec-sem-title">Semestre ${semestre.numSemestre} &mdash; ${semestre.periodo}</span>
-      ${tieneCondonacion ? '<span class="badge badge--convenio" style="margin-left: 10px; padding: 2px 8px; font-size: 0.75rem;"><i class="bi bi-magic"></i> Condonado</span>' : ''}
+      ${tieneCondonacion ? '<span class="badge badge--convenio ec-badge-condonado"><i class="bi bi-magic"></i> Condonado</span>' : ''}
     </div>
     <div class="ec-table-wrap">
       <table class="ec-table">
@@ -253,7 +253,7 @@ function renderHeader(alumno, semestres) {
         : "convenio";
   document.getElementById("ec-chips").innerHTML = `
     <span class="ec-chip"><i class="bi bi-person-badge-fill"></i> Matrícula: ${alumno.matricula}</span>
-    <span class="ec-chip"><i class="bi bi-circle-fill" style="font-size:.5rem"></i> ${alumno.estatus}</span>`;
+    <span class="ec-chip"><i class="bi bi-circle-fill ec-chip-icon"></i> ${alumno.estatus}</span>`;
 
   // Precios del semestre más reciente
   const sem = semestres.length ? semestres[semestres.length - 1] : null;
@@ -321,7 +321,7 @@ function renderFacturacion(alumno) {
   ].filter(([, v]) => v);
 
   if (!campos.length) {
-    grid.innerHTML = `<p class="ec-no-data" style="padding:0;">Sin datos fiscales registrados.</p>`;
+    grid.innerHTML = `<p class="ec-no-data ec-no-data-facturacion">Sin datos fiscales registrados.</p>`;
     return;
   }
   grid.innerHTML = campos

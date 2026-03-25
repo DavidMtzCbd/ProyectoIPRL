@@ -2,6 +2,7 @@ import { appState, setToken } from "../../Shared/js/state.js";
 import {
   getMe,
   getSemestres,
+  getCuatrimestres,
   getAlumnoPagos,
   updateAlumno,
 } from "../../Shared/js/api.js";
@@ -105,10 +106,10 @@ async function guardarFacturacion() {
 
     // 1. Mostrar pantalla de éxito DENTRO del modal
     modalContent.innerHTML = `
-      <div style="padding: 40px 20px; text-align: center;">
-        <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: var(--success); margin-bottom: 15px; display: inline-block;"></i>
-        <h2 style="margin-bottom: 10px;">¡Datos guardados!</h2>
-        <p style="color: var(--muted);">Tu información fiscal ha sido actualizada correctamente.</p>
+      <div class="fact-success-container">
+        <i class="bi bi-check-circle-fill fact-success-icon"></i>
+        <h2 class="fact-success-title">¡Datos guardados!</h2>
+        <p class="fact-success-text">Tu información fiscal ha sido actualizada correctamente.</p>
       </div>
     `;
 
@@ -161,15 +162,20 @@ async function bootstrap() {
     await loadPortalComponents();
 
     // 3. Cargar datos en paralelo
+    const isMaestria = alumnoData.ofertaAcademica && alumnoData.ofertaAcademica.toLowerCase().includes("maestr");
+    const semestresPromise = isMaestria 
+      ? getCuatrimestres(alumnoData._id).catch(() => []) 
+      : getSemestres(alumnoData._id).catch(() => []);
+
     const [semestres, pagos] = await Promise.all([
-      getSemestres(alumnoData._id).catch(() => []),
+      semestresPromise,
       getAlumnoPagos(alumnoData._id).catch(() => []),
     ]);
 
     // 4. Poblar vistas delegando a los Controladores
     renderPerfil(alumnoData);
     renderFacturacion(alumnoData);
-    renderSemestre(semestres);
+    renderSemestre(semestres, alumnoData);
     renderHistorial(pagos);
 
     // 5. Escuchar eventos UI

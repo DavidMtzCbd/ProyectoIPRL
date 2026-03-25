@@ -382,3 +382,19 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Estilos extraídos de estadoCuentaView.js ────────────────────────────── */
+
+.ec-badge-condonado {
+  margin-left: 10px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
+.ec-chip-icon {
+  font-size: .5rem;
+}
+
+.ec-no-data-facturacion {
+  padding: 0;
+}

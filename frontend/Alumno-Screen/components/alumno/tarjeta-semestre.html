@@ -7,7 +7,7 @@
     </div>
   </div>
   <div class="section-body">
-    <p style="font-size: 0.82rem; color: var(--muted); margin-bottom: 12px">
+    <p style="font-size: 0.82rem; color: var(--muted); margin-bottom: 12px" id="desc-colegiatura">
       Precios del semestre activo. El precio final ya incluye el descuento por
       beca si aplica.
     </p>
@@ -28,3 +28,17 @@
     </table>
   </div>
 </div>
+
+<template id="semestre-row-template">
+  <tr>
+    <td class="sem-concepto"></td>
+    <td class="price-base sem-base"></td>
+    <td class="sem-beca-container">
+      <span class="beca-pill" style="display: none;">
+        <i class="bi bi-stars"></i> <span class="beca-pct"></span>% beca
+      </span>
+      <span class="sin-beca" style="color:var(--muted);font-size:.8rem; display: none;">Sin beca</span>
+    </td>
+    <td class="price-final sem-final"></td>
+  </tr>
+</template>
