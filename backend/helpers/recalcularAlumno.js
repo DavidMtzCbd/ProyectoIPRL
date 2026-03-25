@@ -17,6 +17,7 @@
 
 const Alumno = require("../models/Alumno");
 const Semestre = require("../models/Semestre");
+const Cuatrimestre = require("../models/Cuatrimestre");
 const Pago = require("../models/Pago");
 
 // Meses de cada tipo de semestre (índices JS: 0=Ene, 1=Feb, …, 11=Dic)
@@ -53,15 +54,42 @@ function mesesVencidos(semestre) {
   return count;
 }
 
+function mesesVencidosCuatrimestre(cuatrimestre) {
+  const partes = (cuatrimestre.periodo || "").split(" ");
+  // Puede ser "2026 Enero-Abril" o "Enero-Abril" (si falta año, usamos el actual)
+  const anioStr = partes.length > 1 ? partes[0] : new Date().getFullYear().toString();
+  const mesesStr = partes.length > 1 ? partes[1] : partes[0];
+  
+  const añoPeriodo = parseInt(anioStr, 10) || new Date().getFullYear();
+  
+  let mesesIndices = [];
+  if (mesesStr === "Enero-Abril") mesesIndices = [0, 1, 2, 3];
+  else if (mesesStr === "Mayo-Agosto") mesesIndices = [4, 5, 6, 7];
+  else if (mesesStr === "Septiembre-Diciembre") mesesIndices = [8, 9, 10, 11];
+  else mesesIndices = [0, 1, 2, 3];
+  
+  const hoy = new Date();
+  const hoyMes = hoy.getMonth();
+  const hoyAño = hoy.getFullYear();
+  
+  let count = 0;
+  for (const mes of mesesIndices) {
+    const vencido = añoPeriodo < hoyAño || (añoPeriodo === hoyAño && mes <= hoyMes);
+    if (vencido) count++;
+  }
+  return count;
+}
+
 async function recalcularAlumno(alumnoId) {
-  // Obtener semestres y pagos en paralelo
-  const [semestres, pagos] = await Promise.all([
+  // Obtener semestres, cuatrimestres y pagos en paralelo
+  const [semestres, cuatrimestres, pagos] = await Promise.all([
     Semestre.find({ alumnoID: alumnoId }),
+    Cuatrimestre.find({ alumnoID: alumnoId }),
     Pago.find({ alumnoID: alumnoId }),
   ]);
 
   // Calcular total esperado solo con los meses ya vencidos
-  const totalEsperado = semestres.reduce((acc, s) => {
+  const totalEsperadoSemestres = semestres.reduce((acc, s) => {
     const mul = 1 - (s.descuentoPorcentaje ?? 0) / 100;
     const col0 =
       s.numSemestre === 1
@@ -70,6 +98,18 @@ async function recalcularAlumno(alumnoId) {
     const meses = s.colegiaturaMensual * mul * mesesVencidos(s);
     return acc + col0 + meses;
   }, 0);
+
+  const totalEsperadoCuatrimestres = cuatrimestres.reduce((acc, c) => {
+    const mul = 1 - (c.descuentoPorcentaje ?? 0) / 100;
+    const col0 =
+      c.numCuatrimestre === 1
+        ? (c.inscripcion ?? 0) * mul
+        : (c.reinscripcion ?? 0) * mul;
+    const meses = c.colegiaturaMensual * mul * mesesVencidosCuatrimestre(c);
+    return acc + col0 + meses;
+  }, 0);
+
+  const totalEsperado = totalEsperadoSemestres + totalEsperadoCuatrimestres;
 
   // Total pagado real
   const totalPagado = pagos.reduce((acc, p) => acc + (p.monto ?? 0), 0);

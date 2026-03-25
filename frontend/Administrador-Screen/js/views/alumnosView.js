@@ -7,6 +7,9 @@ import {
   getSemestres,
   createSemestre,
   updateSemestre,
+  getCuatrimestres,
+  createCuatrimestre,
+  updateCuatrimestre,
 } from "../../../Shared/js/api.js";
 
 import {
@@ -267,11 +270,18 @@ const paginadorPagosAlumno = new Paginator({
 async function abrirDetalleAlumno(id) {
   alumnoDetalleId = id;
   try {
-    const [alumno, pagos, semestres] = await Promise.all([
+    const [alumno, pagos] = await Promise.all([
       getAlumnoById(id),
       getAlumnoPagos(id),
-      getSemestres(id).catch(() => []),
     ]);
+
+    const esMaestria = alumno.ofertaAcademica && alumno.ofertaAcademica.includes("Maestría");
+    let periodos = [];
+    if (esMaestria) {
+      periodos = await getCuatrimestres(id).catch(() => []);
+    } else {
+      periodos = await getSemestres(id).catch(() => []);
+    }
 
     // Rellena campos del modal (estructura estática en HTML, datos en JS)
     const set = (elId, valor) => {
@@ -292,17 +302,29 @@ async function abrirDetalleAlumno(id) {
     const daEstatus = document.getElementById("da-estatus");
     if (daEstatus) daEstatus.innerHTML = badgeEstatus(alumno.estatus);
 
-    // Semestres
+    // Semestres o Cuatrimestres
     const semContainer = document.getElementById("semestres-lista");
-    if (semContainer) renderSemestresEnDetalle(semestres);
+    if (semContainer) {
+      if (esMaestria) renderCuatrimestresEnDetalle(periodos);
+      else renderSemestresEnDetalle(periodos);
+    }
 
-    // Botón agregar semestre
+    // Botón agregar semestre o cuatrimestre
     const btnNuevoSem = document.getElementById("btn-nuevo-semestre");
     if (btnNuevoSem) {
-      btnNuevoSem.onclick = () => {
-        closeModal("modal-detalle-alumno");
-        abrirModalSemestre(null);
-      };
+      if (esMaestria) {
+        btnNuevoSem.innerHTML = '<i class="bi bi-plus-lg"></i> Nuevo Cuatrimestre';
+        btnNuevoSem.onclick = () => {
+          closeModal("modal-detalle-alumno");
+          abrirModalCuatrimestre(null);
+        };
+      } else {
+        btnNuevoSem.innerHTML = '<i class="bi bi-plus-lg"></i> Nuevo Semestre';
+        btnNuevoSem.onclick = () => {
+          closeModal("modal-detalle-alumno");
+          abrirModalSemestre(null);
+        };
+      }
     }
 
     // Historial de pagos
@@ -514,6 +536,229 @@ function initSemestre() {
     });
 }
 
+// ── Cuatrimestres (Maestrías) ─────────────────────────────────────────────────
+
+function renderCuatrimestresEnDetalle(cuatrimestres) {
+  const container = document.getElementById("semestres-lista");
+  if (!container) return;
+
+  if (!cuatrimestres.length) {
+    container.innerHTML = `<p class="semestres-lista-vacio">Sin cuatrimestres registrados.</p>`;
+    return;
+  }
+
+  container.innerHTML = cuatrimestres
+    .map((c) => {
+      const beca =
+        c.descuentoPorcentaje > 0
+          ? `<span class="semestre-badge-beca-aplicada">Beca ${c.descuentoPorcentaje}%</span>`
+          : `<span class="semestre-badge-sin-beca">Sin beca</span>`;
+
+      return `
+    <div class="semestre-item">
+      <div class="semestre-item-info">
+        <strong class="semestre-item-titulo">Cuatrimestre ${c.numCuatrimestre} — ${c.periodo}</strong>
+        <div class="semestre-item-detalles">
+          Inscripción: ${fmt(c.inscripcion)}
+          · Reinscripción: ${fmt(c.reinscripcion)}
+          · Colegiatura: ${fmt(c.colegiaturaMensual)}
+        </div>
+      </div>
+      ${beca}
+      <button class="btn-sm btn-primary btn-editar-cuatrimestre semestre-btn-editar"
+        data-cid="${c._id}"
+        data-num="${c.numCuatrimestre}"
+        data-periodo="${c.periodo}"
+        data-inscripcion="${c.inscripcion ?? 0}"
+        data-reinscripcion="${c.reinscripcion ?? 0}"
+        data-colegiatura="${c.colegiaturaMensual ?? 0}"
+        data-beca="${c.descuentoPorcentaje ?? 0}">
+        <i class="bi bi-pencil-fill"></i> Editar
+      </button>
+    </div>`;
+    })
+    .join("");
+
+  container.querySelectorAll(".btn-editar-cuatrimestre").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      abrirModalCuatrimestre({
+        _id: btn.dataset.cid,
+        numCuatrimestre: Number(btn.dataset.num),
+        periodo: btn.dataset.periodo,
+        inscripcion: Number(btn.dataset.inscripcion),
+        reinscripcion: Number(btn.dataset.reinscripcion),
+        colegiaturaMensual: Number(btn.dataset.colegiatura),
+        descuentoPorcentaje: Number(btn.dataset.beca),
+      });
+    });
+  });
+}
+
+export async function abrirModalCuatrimestre(cuatrimestre = null, alumnoIdOverride = null) {
+  const form = document.getElementById("form-cuatrimestre-alumno");
+  const title = document.getElementById("cuatrimestre-modal-title");
+  const submitBtn = document.getElementById("cuatrimestre-submit-btn");
+  if (!form) return;
+
+  form.reset();
+  document.getElementById("cuatrimestre-preview").classList.add("semestre-preview-hidden");
+  document.getElementById("cuatrimestre-preview").classList.remove("semestre-preview-visible");
+  document.getElementById("c-recurso").checked = false;
+
+  if (cuatrimestre) {
+    title.textContent = `Editar Cuatrimestre ${cuatrimestre.numCuatrimestre} — ${cuatrimestre.periodo}`;
+    submitBtn.innerHTML = '<i class="bi bi-floppy-fill"></i> Guardar cambios';
+    document.getElementById("c-id").value = cuatrimestre._id;
+    document.getElementById("c-num").value = cuatrimestre.numCuatrimestre;
+
+    const [anio, meses] = (cuatrimestre.periodo || "").split(" ");
+    document.getElementById("c-anio").value = anio || "";
+    document.getElementById("c-meses").value = meses || "";
+
+    document.getElementById("c-inscripcion").value = cuatrimestre.inscripcion;
+    document.getElementById("c-reinscripcion").value = cuatrimestre.reinscripcion;
+    document.getElementById("c-colegiatura").value = cuatrimestre.colegiaturaMensual;
+    document.getElementById("c-beca").value = cuatrimestre.descuentoPorcentaje;
+    actualizarPreviewBecaCuatrimestre();
+  } else {
+    title.textContent = "Registrar nuevo cuatrimestre";
+    submitBtn.innerHTML = '<i class="bi bi-floppy-fill"></i> Guardar cuatrimestre';
+    document.getElementById("c-id").value = "";
+    document.getElementById("c-anio").value = new Date().getFullYear();
+    
+    const alumnoId = alumnoIdOverride || alumnoDetalleId;
+    if (alumnoId) {
+        try {
+            const cuatrimestres = await getCuatrimestres(alumnoId);
+            if (cuatrimestres && cuatrimestres.length > 0) {
+                const cBase = cuatrimestres.sort((a,b) => a.numCuatrimestre - b.numCuatrimestre)[0];
+                document.getElementById("c-inscripcion").value = cBase.inscripcion ?? 0;
+                document.getElementById("c-reinscripcion").value = cBase.reinscripcion ?? 0;
+                document.getElementById("c-colegiatura").value = cBase.colegiaturaMensual ?? 0;
+                document.getElementById("c-beca").value = cBase.descuentoPorcentaje ?? 0;
+                actualizarPreviewBecaCuatrimestre();
+                
+                const ultimoC = cuatrimestres.sort((a,b) => b.numCuatrimestre - a.numCuatrimestre)[0];
+                document.getElementById("c-num").value = ultimoC.numCuatrimestre + 1;
+                
+                if (ultimoC.periodo) {
+                    const [anioStr, mesesStr] = ultimoC.periodo.split(" ");
+                    let anio = parseInt(anioStr) || new Date().getFullYear();
+                    
+                    if (mesesStr === "Enero-Abril") {
+                        document.getElementById("c-anio").value = anio;
+                        document.getElementById("c-meses").value = "Mayo-Agosto";
+                    } else if (mesesStr === "Mayo-Agosto") {
+                        document.getElementById("c-anio").value = anio;
+                        document.getElementById("c-meses").value = "Septiembre-Diciembre";
+                    } else if (mesesStr === "Septiembre-Diciembre") {
+                        document.getElementById("c-anio").value = anio + 1;
+                        document.getElementById("c-meses").value = "Enero-Abril";
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("No se pudieron cargar los cuatrimestres base", e);
+        }
+    }
+  }
+
+  document.getElementById("c-alumno-id").value = alumnoIdOverride || alumnoDetalleId;
+  openModal("modal-cuatrimestre-alumno");
+}
+
+function actualizarPreviewBecaCuatrimestre() {
+  const insc = Number(document.getElementById("c-inscripcion").value) || 0;
+  const reinsc = Number(document.getElementById("c-reinscripcion").value) || 0;
+  const cole = Number(document.getElementById("c-colegiatura").value) || 0;
+  const beca = Number(document.getElementById("c-beca").value) || 0;
+  const preview = document.getElementById("cuatrimestre-preview");
+
+  if (beca > 0 && (insc || reinsc || cole)) {
+    const mul = 1 - beca / 100;
+    document.getElementById("prev-c-insc").textContent = fmt(insc * mul);
+    document.getElementById("prev-c-reinsc").textContent = fmt(reinsc * mul);
+    document.getElementById("prev-c-cole").textContent = fmt(cole * mul);
+    preview.classList.add("semestre-preview-visible");
+    preview.classList.remove("semestre-preview-hidden");
+  } else {
+    preview.classList.add("semestre-preview-hidden");
+    preview.classList.remove("semestre-preview-visible");
+  }
+}
+
+function initCuatrimestre() {
+  ["c-inscripcion", "c-reinscripcion", "c-colegiatura", "c-beca"].forEach(
+    (id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", actualizarPreviewBecaCuatrimestre);
+    },
+  );
+
+  document
+    .getElementById("form-cuatrimestre-alumno")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const cId = document.getElementById("c-id").value;
+      const alumnoID = document.getElementById("c-alumno-id").value;
+      const numCuatrimestre = Number(document.getElementById("c-num").value);
+      const esRecurso = document.getElementById("c-recurso").checked;
+
+      const anio = document.getElementById("c-anio").value.trim();
+      const meses = document.getElementById("c-meses").value;
+      if (!anio || !meses) {
+        showAlert("Indica el año y el periodo de meses.", "error");
+        return;
+      }
+      const periodo = `${anio} ${meses}`;
+
+      if (!cId && !esRecurso) {
+        const cuatrimestresExistentes = await getCuatrimestres(alumnoID).catch(
+          () => [],
+        );
+        const duplicado = cuatrimestresExistentes.some(
+          (c) => c.numCuatrimestre === numCuatrimestre,
+        );
+        if (duplicado) {
+          showAlert(
+            `El Cuatrimestre ${numCuatrimestre} ya está registrado. Si es repetidor, activa la casilla 'Es repetidor'.`,
+            "error",
+          );
+          return;
+        }
+      }
+
+      const data = {
+        alumnoID,
+        numCuatrimestre,
+        periodo,
+        inscripcion: Number(document.getElementById("c-inscripcion").value),
+        reinscripcion: Number(document.getElementById("c-reinscripcion").value),
+        colegiaturaMensual: Number(document.getElementById("c-colegiatura").value),
+        descuentoPorcentaje: Number(document.getElementById("c-beca").value),
+      };
+
+      try {
+        if (cId) {
+          await updateCuatrimestre(cId, data);
+          showAlert("Cuatrimestre actualizado correctamente ✔", "success");
+        } else {
+          await createCuatrimestre(data);
+          showAlert("Cuatrimestre registrado correctamente ✔", "success");
+        }
+        closeModal("modal-cuatrimestre-alumno");
+        const cuatrimestres = await getCuatrimestres(alumnoID);
+        renderCuatrimestresEnDetalle(cuatrimestres);
+
+        document.dispatchEvent(
+          new CustomEvent("semestreActualizado", { detail: alumnoID }),
+        );
+      } catch (error) {
+        showAlert("Error: " + error.message, "error");
+      }
+    });
+}
+
 function initAgregarAlumno() {
   document
     .getElementById("btn-agregar-alumno")
@@ -533,8 +778,7 @@ function initAgregarAlumno() {
         apellidoPaterno: document.getElementById("a-ap").value.trim(),
         apellidoMaterno: document.getElementById("a-am").value.trim(),
         matricula: Number(document.getElementById("a-matricula").value),
-        ofertaAcademica: document.getElementById("a-oferta").value.trim(),
-        estatus: document.getElementById("a-estatus").value,
+        ofertaAcademica: document.getElementById("a-oferta").value.trim()
       };
 
       try {
@@ -557,11 +801,13 @@ export async function initAlumnos() {
     "components/modals/alumnos/modal-editar-alumno.html",
     "components/modals/alumnos/modal-detalle-alumno.html",
     "components/modals/alumnos/modal-semestre-alumno.html",
+    "components/modals/alumnos/modal-cuatrimestre-alumno.html",
   ]);
   bindCloseButtons();
   initAgregarAlumno();
   initEditarAlumno();
   initSemestre();
+  initCuatrimestre();
   await cargarAlumnos();
   initFiltros();
 }

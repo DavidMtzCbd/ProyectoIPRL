@@ -108,3 +108,18 @@ export function updateSemestre(id, data) {
     body: JSON.stringify(data),
   });
 }
+
+export function getCuatrimestres(alumnoId) {
+  return request(`/cuatrimestres/alumno/${alumnoId}`);
+}
+
+export function createCuatrimestre(data) {
+  return request("/cuatrimestres", { method: "POST", body: JSON.stringify(data) });
+}
+
+export function updateCuatrimestre(id, data) {
+  return request(`/cuatrimestres/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
