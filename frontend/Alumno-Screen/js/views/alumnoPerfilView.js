@@ -66,6 +66,13 @@ export function renderPerfil(alumno) {
   // Oferta educativa en la tarjeta del grid
   const cardOferta = document.getElementById("card-oferta");
   if (cardOferta) cardOferta.textContent = alumno.ofertaAcademica || "—";
+
+  // Label "Semestre/Cuatrimestre activo"
+  const lblSemestreActivo = document.getElementById("label-semestre-activo");
+  if (lblSemestreActivo) {
+    const isMaestria = alumno.ofertaAcademica && alumno.ofertaAcademica.toLowerCase().includes("maestr");
+    lblSemestreActivo.innerHTML = `<i class="bi bi-calendar3"></i> <span>${isMaestria ? "Cuatrimestre" : "Semestre"} activo</span>`;
+  }
 }
 
 export function renderFacturacion(alumno) {

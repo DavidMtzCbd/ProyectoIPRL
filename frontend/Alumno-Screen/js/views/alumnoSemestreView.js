@@ -1,22 +1,32 @@
 import { formatMoney } from "../../../Shared/js/ui.js";
 
-export function renderSemestre(semestres) {
+export function renderSemestre(semestres, alumnoData) {
   const tbody = document.getElementById("colegiatura-body");
   const cardSem = document.getElementById("card-semestre");
 
   if (!tbody || !cardSem) return;
 
+  const isMaestria = alumnoData && alumnoData.ofertaAcademica && alumnoData.ofertaAcademica.toLowerCase().includes("maestr");
+  const textTerm = isMaestria ? "Cuatrimestre" : "Semestre";
+  const textTermAbbr = isMaestria ? "Cuat." : "Sem.";
+
+  const descColegiatura = document.getElementById("desc-colegiatura");
+  if (descColegiatura) {
+    descColegiatura.textContent = `Precios del ${textTerm.toLowerCase()} activo. El precio final ya incluye el descuento por beca si aplica.`;
+  }
+
   if (!semestres || semestres.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="no-data">Sin semestres registrados</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="no-data">Sin ${textTerm.toLowerCase()}s registrados</td></tr>`;
     cardSem.textContent = "—";
     return;
   }
 
   // El más reciente (último en el array)
-  const sem = semestres.sort((a, b) => a.numSemestre - b.numSemestre)[
+  const numSortField = isMaestria ? "numCuatrimestre" : "numSemestre";
+  const sem = semestres.sort((a, b) => a[numSortField] - b[numSortField])[
     semestres.length - 1
   ];
-  cardSem.textContent = `Sem. ${sem.numSemestre} — ${sem.periodo}`;
+  cardSem.textContent = `${textTermAbbr} ${sem[numSortField]} — ${sem.periodo}`;
 
   const descuento = sem.descuentoPorcentaje ?? 0;
   const inscBase = sem.inscripcion ?? 0;

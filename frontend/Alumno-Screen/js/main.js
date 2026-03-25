@@ -2,6 +2,7 @@ import { appState, setToken } from "../../Shared/js/state.js";
 import {
   getMe,
   getSemestres,
+  getCuatrimestres,
   getAlumnoPagos,
   updateAlumno,
 } from "../../Shared/js/api.js";
@@ -161,15 +162,20 @@ async function bootstrap() {
     await loadPortalComponents();
 
     // 3. Cargar datos en paralelo
+    const isMaestria = alumnoData.ofertaAcademica && alumnoData.ofertaAcademica.toLowerCase().includes("maestr");
+    const semestresPromise = isMaestria 
+      ? getCuatrimestres(alumnoData._id).catch(() => []) 
+      : getSemestres(alumnoData._id).catch(() => []);
+
     const [semestres, pagos] = await Promise.all([
-      getSemestres(alumnoData._id).catch(() => []),
+      semestresPromise,
       getAlumnoPagos(alumnoData._id).catch(() => []),
     ]);
 
     // 4. Poblar vistas delegando a los Controladores
     renderPerfil(alumnoData);
     renderFacturacion(alumnoData);
-    renderSemestre(semestres);
+    renderSemestre(semestres, alumnoData);
     renderHistorial(pagos);
 
     // 5. Escuchar eventos UI
