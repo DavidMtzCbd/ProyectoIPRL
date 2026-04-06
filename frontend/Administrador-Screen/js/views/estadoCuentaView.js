@@ -3,10 +3,11 @@ import {
   getAlumnoById,
   getAlumnoPagos,
   getSemestres,
+  getCuatrimestres,
   updateAlumno,
 } from "../../../Shared/js/api.js";
 import { showAlert, formatMoney, formatDate } from "../../../Shared/js/ui.js";
-import { abrirModalSemestre } from "./alumnosView.js";
+import { abrirModalSemestre, abrirModalCuatrimestre } from "./alumnosView.js";
 
 // ── Listener Global de Refresco ───────────────────────────────────────────────
 let isSemestreListenerBound = false;
@@ -56,6 +57,29 @@ function encabezado0(numSemestre) {
   return numSemestre === 1 ? "Inscripción" : "Re-Inscripción";
 }
 
+// ── Lógica de cuatrimestres ───────────────────────────────────────────────────
+
+// Meses 1-based por período de cuatrimestre
+const CUATRI_PERIODOS = {
+  "Enero-Abril":          [1, 2, 3, 4],
+  "Mayo-Agosto":          [5, 6, 7, 8],
+  "Septiembre-Diciembre": [9, 10, 11, 12],
+};
+
+const MES_NOMBRES_FULL = [
+  "", "Enero", "Febrero", "Marzo", "Abril",
+  "Mayo", "Junio", "Julio", "Agosto",
+  "Septiembre", "Octubre", "Noviembre", "Diciembre",
+];
+
+function colsParaCuatrimestre(numCuatrimestre, periodo) {
+  // periodo ej. "2026 Mayo-Agosto" → meses [5,6,7,8]
+  const mesesStr = (periodo ?? "").split(" ")[1] ?? "Enero-Abril";
+  const meses = CUATRI_PERIODOS[mesesStr] ?? [1, 2, 3, 4];
+  const etiqueta = numCuatrimestre === 1 ? "Inscripción" : "Re-Inscripción";
+  return [etiqueta, ...meses]; // 5 elementos: [label, m1, m2, m3, m4]
+}
+
 // ── Algoritmo de mapeo ────────────────────────────────────────────────────────
 //
 // Para cada semestre, construye un array de 7 celdas:
@@ -72,11 +96,11 @@ function mapearPagos(semestre, pagos) {
   const esperadoColegiatura =
     semestre.colegiaturaMensual *
     (1 - (semestre.descuentoPorcentaje ?? 0) / 100);
+  // La beca NO aplica en inscripción ni reinscripción (solo en colegiatura)
   const esperadoInscripcion =
     semestre.numSemestre === 1
-      ? semestre.inscripcion * (1 - (semestre.descuentoPorcentaje ?? 0) / 100)
-      : semestre.reinscripcion *
-        (1 - (semestre.descuentoPorcentaje ?? 0) / 100);
+      ? semestre.inscripcion
+      : semestre.reinscripcion;
 
   // Montos esperados por celda
   const esperados = cols.map((c, i) =>
@@ -167,6 +191,136 @@ function mapearPagos(semestre, pagos) {
   });
 }
 
+// ── Mapeo de pagos para cuatrimestres ────────────────────────────────────────
+
+function mapearPagosCuatrimestre(cuatrimestre, pagos) {
+  const cols = colsParaCuatrimestre(cuatrimestre.numCuatrimestre, cuatrimestre.periodo);
+  const esperadoColegiatura =
+    cuatrimestre.colegiaturaMensual *
+    (1 - (cuatrimestre.descuentoPorcentaje ?? 0) / 100);
+  // La beca NO aplica en inscripción/reinscripción
+  const esperadoInscripcion =
+    cuatrimestre.numCuatrimestre === 1
+      ? cuatrimestre.inscripcion
+      : cuatrimestre.reinscripcion;
+
+  const esperados = cols.map((_, i) =>
+    i === 0 ? esperadoInscripcion : esperadoColegiatura,
+  );
+
+  const celdas = cols.map((_, i) => ({
+    montoPagado: 0,
+    fechaPago: null,
+    esperado: esperados[i],
+    esCondonacion: false,
+  }));
+
+  // cols[1..4] son números 1-based; getMonth() es 0-based → +1 para comparar
+  pagos.forEach((p) => {
+    const concepto = p.concepto ?? "";
+    const esColegiatura = concepto.toLowerCase().includes("colegiatura");
+    const esInscripcion = concepto === "Inscripción";
+    const esReinscripcion = concepto === "Reinscripción";
+
+    if (concepto === "Condonación de deuda") {
+      celdas[0].montoPagado += p.monto;
+      celdas[0].esCondonacion = true;
+      return;
+    }
+    if (esInscripcion && cuatrimestre.numCuatrimestre === 1) {
+      celdas[0].montoPagado += p.monto;
+      if (!celdas[0].fechaPago) celdas[0].fechaPago = p.fechaPago;
+      return;
+    }
+    if (esReinscripcion && cuatrimestre.numCuatrimestre > 1) {
+      celdas[0].montoPagado += p.monto;
+      if (!celdas[0].fechaPago) celdas[0].fechaPago = p.fechaPago;
+      return;
+    }
+    if (esColegiatura) {
+      const mesDelPago = new Date(p.fechaPago).getMonth() + 1; // 1-based
+      const colIdx = cols.findIndex((c, i) => i > 0 && c === mesDelPago);
+      if (colIdx !== -1) {
+        celdas[colIdx].montoPagado += p.monto;
+        if (!celdas[colIdx].fechaPago) celdas[colIdx].fechaPago = p.fechaPago;
+      }
+    }
+  });
+
+  const añoCuat = parseInt(cuatrimestre.periodo, 10) || new Date().getFullYear();
+  const hoy = new Date();
+  const hoyMes1 = hoy.getMonth() + 1; // 1-based
+  const hoyAño = hoy.getFullYear();
+
+  return celdas.map((c, i) => {
+    let saldoVencido;
+    if (i === 0) {
+      saldoVencido = c.montoPagado - c.esperado;
+    } else {
+      const mesCol = cols[i]; // 1-based
+      const esPasadoOActual =
+        añoCuat < hoyAño || (añoCuat === hoyAño && mesCol <= hoyMes1);
+      saldoVencido = esPasadoOActual ? c.montoPagado - c.esperado : 0;
+    }
+    return { ...c, saldoVencido };
+  });
+}
+
+function renderCuatrimestreTabla(cuatrimestre, pagos) {
+  const cols = colsParaCuatrimestre(cuatrimestre.numCuatrimestre, cuatrimestre.periodo);
+  const celdas = mapearPagosCuatrimestre(cuatrimestre, pagos);
+
+  const saldoTotal = celdas.reduce((acc, c) => acc + c.saldoVencido, 0);
+  const saldoClass = saldoTotal >= 0 ? "ec-saldo--verde" : "ec-saldo--rojo";
+  const tieneCondonacion = celdas.some(c => c.esCondonacion);
+
+  // Encabezados: col 0 = "Inscripción"/"Re-Inscripción", cols 1..4 = nombre completo del mes
+  const ths = cols
+    .map((c, i) => `<th>${i === 0 ? cols[0] : MES_NOMBRES_FULL[c]}</th>`)
+    .join("");
+
+  function celda(row) {
+    return celdas
+      .map((c) => {
+        if (row === "monto") {
+          return `<td class="ec-cell--pagado">${fmt(c.montoPagado)}</td>`;
+        }
+        if (row === "saldo") {
+          if (c.saldoVencido === 0) return `<td class="ec-cell--vencido-pos">$0.00</td>`;
+          if (c.saldoVencido > 0) return `<td class="ec-cell--vencido-pos">${fmt(c.saldoVencido)}</td>`;
+          return `<td class="ec-cell--vencido-neg">${fmt(c.saldoVencido)}</td>`;
+        }
+        if (row === "fecha") {
+          if (!c.fechaPago) return `<td class="ec-cell--empty">—</td>`;
+          return `<td class="ec-cell--fecha">${formatDate(c.fechaPago)}</td>`;
+        }
+      })
+      .join("");
+  }
+
+  return `
+  <div class="ec-section">
+    <div class="ec-section-header">
+      <i class="bi bi-calendar3"></i>
+      <span class="ec-sem-title">Cuatrimestre ${cuatrimestre.numCuatrimestre} &mdash; ${cuatrimestre.periodo}</span>
+      ${tieneCondonacion ? '<span class="badge badge--convenio ec-badge-condonado"><i class="bi bi-magic"></i> Condonado</span>' : ''}
+    </div>
+    <div class="ec-table-wrap">
+      <table class="ec-table">
+        <thead><tr><th></th>${ths}</tr></thead>
+        <tbody>
+          <tr><td>Monto Pagado</td>${celda("monto")}</tr>
+          <tr><td>Saldo Vencido</td>${celda("saldo")}</tr>
+          <tr><td>Fecha de Pago</td>${celda("fecha")}</tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ec-sem-saldo ${saldoClass}">
+      Saldo del cuatrimestre: ${fmt(saldoTotal)}
+    </div>
+  </div>`;
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 
 function fmt(v) {
@@ -176,7 +330,7 @@ function fmt(v) {
   }).format(Number(v ?? 0));
 }
 
-function renderSemestreTabla(semestre, pagos) {
+function renderSemestreTabla(semestre, pagos, opciones = {}) {
   const cols = colsParaSemestre(semestre.numSemestre);
   const celdas = mapearPagos(semestre, pagos);
   const enc0 = encabezado0(semestre.numSemestre);
@@ -215,12 +369,15 @@ function renderSemestreTabla(semestre, pagos) {
   }
 
   const tieneCondonacion = celdas.some(c => c.esCondonacion) || celdas.some(c => c.saldoVencido < -100 && saldoTotal === 0);
+  // Permite pasar "Cuatrimestre" o "Semestre" como etiqueta
+  const etiqueta = opciones?.etiqueta ?? "Semestre";
+  const numPeriodo = opciones?.numPeriodo ?? semestre.numSemestre;
 
   return `
   <div class="ec-section">
     <div class="ec-section-header">
       <i class="bi bi-calendar3"></i>
-      <span class="ec-sem-title">Semestre ${semestre.numSemestre} &mdash; ${semestre.periodo}</span>
+      <span class="ec-sem-title">${etiqueta} ${numPeriodo} &mdash; ${semestre.periodo}</span>
       ${tieneCondonacion ? '<span class="badge badge--convenio ec-badge-condonado"><i class="bi bi-magic"></i> Condonado</span>' : ''}
     </div>
     <div class="ec-table-wrap">
@@ -234,7 +391,7 @@ function renderSemestreTabla(semestre, pagos) {
       </table>
     </div>
     <div class="ec-sem-saldo ${saldoClass}">
-      Saldo del semestre: ${fmt(saldoTotal)}
+      Saldo del ${etiqueta.toLowerCase()}: ${fmt(saldoTotal)}
     </div>
   </div>`;
 }
@@ -263,10 +420,10 @@ function renderHeader(alumno, semestres) {
     document.getElementById("ec-prices").innerHTML = `
       <span class="price-label">Inscripción</span>
       <span class="price-base">${fmt(sem.inscripcion)}</span>
-      <span class="price-final">${fmt(sem.inscripcion * mul)}</span>
+      <span class="price-final">${fmt(sem.inscripcion)}</span>
       <span class="price-label">Re-Inscripción</span>
       <span class="price-base">${fmt(sem.reinscripcion)}</span>
-      <span class="price-final">${fmt(sem.reinscripcion * mul)}</span>
+      <span class="price-final">${fmt(sem.reinscripcion)}</span>
       <span class="price-label">Colegiatura</span>
       <span class="price-base">${fmt(sem.colegiaturaMensual)}</span>
       <span class="price-final">${fmt(sem.colegiaturaMensual * mul)}</span>`;
@@ -344,23 +501,47 @@ export async function initEstadoCuenta() {
   }
 
   try {
-    const [alumno, pagos, semestres] = await Promise.all([
+    const [alumno, pagos] = await Promise.all([
       getAlumnoById(alumnoId),
       getAlumnoPagos(alumnoId),
-      getSemestres(alumnoId).catch(() => []),
     ]);
 
-    renderHeader(alumno, semestres);
+    // Detectar si es maestría por oferta académica
+    const oferta = (alumno.ofertaAcademica ?? "").toLowerCase();
+    const esMaestria = oferta.includes("maestr");
 
-    // Renderizar tablas de semestres
+    // Cargar el tipo de períodos correcto
+    let periodos = [];
+    if (esMaestria) {
+      periodos = await getCuatrimestres(alumnoId).catch(() => []);
+    } else {
+      periodos = await getSemestres(alumnoId).catch(() => []);
+    }
+
+    renderHeader(alumno, periodos);
+
+    // Actualizar título y botón de la sección según tipo
+    const tituloEl = document.querySelector(".ec-semestres-title");
+    const btnNuevo = document.getElementById("ec-btn-nuevo-semestre");
+    if (tituloEl) tituloEl.textContent = esMaestria ? "Cuatrimestres" : "Semestres";
+    if (btnNuevo) btnNuevo.innerHTML = esMaestria
+      ? '<i class="bi bi-plus-circle-fill"></i> Registrar cuatrimestre'
+      : '<i class="bi bi-plus-circle-fill"></i> Registrar semestre';
+
+    // Renderizar tablas de períodos
     const semContainer = document.getElementById("ec-semestres");
-    if (semestres.length) {
-      semContainer.innerHTML = semestres
-        .sort((a, b) => a.numSemestre - b.numSemestre)
-        .map((s) => renderSemestreTabla(s, pagos))
+    if (periodos.length) {
+      const etiqueta = esMaestria ? "Cuatrimestre" : "Semestre";
+      const numKey = esMaestria ? "numCuatrimestre" : "numSemestre";
+      semContainer.innerHTML = periodos
+        .sort((a, b) => (a[numKey] ?? 0) - (b[numKey] ?? 0))
+        .map((s) => esMaestria
+          ? renderCuatrimestreTabla(s, pagos)
+          : renderSemestreTabla(s, pagos))
         .join("");
     } else {
-      semContainer.innerHTML = `<div class="ec-section"><p class="ec-no-data">Sin semestres registrados.</p></div>`;
+      const label = esMaestria ? "cuatrimestres" : "semestres";
+      semContainer.innerHTML = `<div class="ec-section"><p class="ec-no-data">Sin ${label} registrados.</p></div>`;
     }
 
     renderGlobalPagos(pagos);
@@ -369,73 +550,71 @@ export async function initEstadoCuenta() {
     // Notas
     document.getElementById("ec-notas").value = alumno.notas ?? "";
 
-    document
-      .getElementById("ec-save-notas")
-      .addEventListener("click", async () => {
-        try {
-          await updateAlumno(alumnoId, {
-            notas: document.getElementById("ec-notas").value,
-          });
-          showAlert("Notas guardadas ✔", "success");
-        } catch (e) {
-          showAlert("Error al guardar: " + e.message, "error");
-        }
-      });
+    // Clonar el botón para evitar listeners duplicados (bug de doble-registro)
+    const btnNotas = document.getElementById("ec-save-notas");
+    const btnNotasNuevo = btnNotas.cloneNode(true);
+    btnNotas.replaceWith(btnNotasNuevo);
+    btnNotasNuevo.addEventListener("click", async () => {
+      try {
+        await updateAlumno(alumnoId, {
+          notas: document.getElementById("ec-notas").value,
+        });
+        showAlert("Notas guardadas ✔", "success");
+      } catch (e) {
+        showAlert("Error al guardar: " + e.message, "error");
+      }
+    });
 
     // Regresar a alumnos
-    document.getElementById("ec-back").addEventListener("click", () => {
+    const btnBack = document.getElementById("ec-back");
+    const btnBackNuevo = btnBack.cloneNode(true);
+    btnBack.replaceWith(btnBackNuevo);
+    btnBackNuevo.addEventListener("click", () => {
       document.querySelector(".nav-btn[data-view='alumnos']")?.click();
     });
 
-    // Botón Registrar semestre
-    document
-      .getElementById("ec-btn-nuevo-semestre")
-      ?.addEventListener("click", () => {
-        abrirModalSemestre(null, alumnoId);
+    // Botón Registrar semestre/cuatrimestre (clonar para evitar duplicados)
+    const btnNuevoActual = document.getElementById("ec-btn-nuevo-semestre");
+    if (btnNuevoActual) {
+      const btnNuevoClone = btnNuevoActual.cloneNode(true);
+      btnNuevoActual.replaceWith(btnNuevoClone);
+      btnNuevoClone.addEventListener("click", () => {
+        if (esMaestria) abrirModalCuatrimestre(null, alumnoId);
+        else abrirModalSemestre(null, alumnoId);
       });
+    }
       
-    // Botón Condonar Deuda
-    document
-      .getElementById("ec-btn-condonar")
-      ?.addEventListener("click", async () => {
-        if(alumno.saldoActual >= 0) {
-            showAlert("El alumno no tiene deuda que condonar.", "info");
-            return;
+    // Botón Condonar Deuda (clonar para evitar listeners duplicados)
+    const btnCondonar = document.getElementById("ec-btn-condonar");
+    if (btnCondonar) {
+      const btnCondonarClone = btnCondonar.cloneNode(true);
+      btnCondonar.replaceWith(btnCondonarClone);
+      btnCondonarClone.addEventListener("click", async () => {
+        if (alumno.saldoActual >= 0) {
+          showAlert("El alumno no tiene deuda que condonar.", "info");
+          return;
         }
-        
         const confirmar = confirm(`¿Estás seguro que deseas condonar la deuda total de ${fmt(alumno.saldoActual)}?\n\nEsto actualizará el saldo del alumno a $0.00 y registrará un movimiento de 'Condonación de Deuda'.`);
-        if(!confirmar) return;
-
+        if (!confirmar) return;
         try {
-            // Registrar pago para la condonación (monto positivo porque es deuda negativa)
-            const pagoVal = Math.abs(alumno.saldoActual);
-            
-            // Si quieres asignarlo a un semestre en particular, aquí podrías,
-            // pero lo dejaremos general (Automático = null)
-            const { createPago } = await import("../../../Shared/js/api.js");
-            
-            const numReq = await createPago({
-                alumnoID: alumnoId,
-                fechaPago: new Date().toISOString().slice(0, 10),
-                monto: pagoVal,
-                concepto: 'Condonación de deuda',
-                metodoPago: 'Condonación',
-                factura: 'No'
-            });
-
-            // Actualizar el saldo y estatus en el perfil
-            await updateAlumno(alumnoId, { 
-                estatus: 'Al corriente', 
-                saldoActual: 0 
-            });
-
-            showAlert(`Deuda por ${fmt(pagoVal)} condonada correctamente.`, "success");
-            // Recargar la vista actual
-            await initEstadoCuenta();
-        } catch(error) {
-            showAlert("Error al condonar deuda: " + error.message, "error");
+          const pagoVal = Math.abs(alumno.saldoActual);
+          const { createPago } = await import("../../../Shared/js/api.js");
+          await createPago({
+            alumnoID: alumnoId,
+            fechaPago: new Date().toISOString().slice(0, 10),
+            monto: pagoVal,
+            concepto: 'Condonación de deuda',
+            metodoPago: 'Condonación',
+            factura: 'No'
+          });
+          await updateAlumno(alumnoId, { estatus: 'Al corriente', saldoActual: 0 });
+          showAlert(`Deuda por ${fmt(pagoVal)} condonada correctamente.`, "success");
+          await initEstadoCuenta();
+        } catch (error) {
+          showAlert("Error al condonar deuda: " + error.message, "error");
         }
       });
+    }
   } catch (error) {
     showAlert("Error al cargar Estado de Cuenta: " + error.message, "error");
   }
