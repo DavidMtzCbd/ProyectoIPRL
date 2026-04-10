@@ -15,10 +15,50 @@ const { logger } = require("../config/logger");
 //en orden en el que se registran (último registrado primero).
 exports.getAlumnos = async (req, res) => {
   try {
-    const alumnos = await Alumno.find().sort({ createdAt: -1 });
-    res.json(alumnos);
+    const pagina = parseInt(req.query.pagina) || 1;
+    const limite = parseInt(req.query.limite) || 0; // 0 significa sin limite
+    const { busqueda, estatus } = req.query;
+
+    const filtro = {};
+    if (estatus) {
+      filtro.estatus = estatus;
+    }
+
+    if (busqueda) {
+      const isNum = !isNaN(busqueda) && busqueda.trim() !== '';
+      if (isNum) {
+        filtro.$or = [
+          { matricula: Number(busqueda) }
+        ];
+      } else {
+        filtro.$or = [
+          { nombre: { $regex: busqueda, $options: "i" } },
+          { apellidoPaterno: { $regex: busqueda, $options: "i" } },
+          { apellidoMaterno: { $regex: busqueda, $options: "i" } },
+          { ofertaAcademica: { $regex: busqueda, $options: "i" } }
+        ];
+      }
+    }
+
+    // Orden alfabético
+    let query = Alumno.find(filtro).sort({ apellidoPaterno: 1, apellidoMaterno: 1, nombre: 1 });
+
+    if (limite > 0) {
+      const skip = (pagina - 1) * limite;
+      query = query.skip(skip).limit(limite);
+    }
+
+    const alumnos = await query;
+    const total = await Alumno.countDocuments(filtro);
+
+    res.json({
+      alumnos,
+      total,
+      paginaActual: pagina,
+      totalPaginas: limite > 0 ? Math.ceil(total / limite) : 1
+    });
   } catch (error) {
-    logger.error("Error al obtener lista de alumnos", error);
+    logger.error("Error al obtener lista de alumnos combinada", error);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

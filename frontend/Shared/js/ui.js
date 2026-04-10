@@ -162,6 +162,124 @@ export class Paginator {
     if (nextBtn) nextBtn.disabled = this._page === totalPages;
   }
 }
+// ── Server Paginator (Backend Pagination) ───────────────────────────────────
+
+/**
+ * ServerPaginator
+ * Descarga y renderiza datos pidiendo página por página al backend.
+ * @param {object} opts
+ *   controlsId   - id del div donde se renderizarán los controles
+ *   fetchData    - async callback(page, limit) que debe retornar { data, total, totalPages, page }
+ *   renderPage   - callback(items) que recibe el slice de datos a mostrar
+ *   rowOptions   - [10, 15, 20] filas por página
+ */
+export class ServerPaginator {
+  constructor({ controlsId, fetchData, renderPage, rowOptions = [10, 15, 20] }) {
+    this._controlsId = controlsId;
+    this._fetchData = fetchData;
+    this._renderPage = renderPage;
+    this._rowOptions = rowOptions;
+    
+    this._page = 1;
+    this._perPage = rowOptions[0];
+    this._total = 0;
+    this._totalPages = 1;
+    this._isControlsBuilt = false;
+  }
+
+  async load(page = 1) {
+    this._page = page;
+    
+    try {
+      const response = await this._fetchData(this._page, this._perPage);
+      this._total = response.total;
+      this._totalPages = response.totalPages;
+      this._page = response.page;
+      
+      this._renderPage(response.data);
+      
+      if (!this._isControlsBuilt || !document.getElementById(`${this._controlsId}-per-page`)) {
+        this._buildControls();
+        this._isControlsBuilt = true;
+      }
+      this._updateControls();
+    } catch (error) {
+      console.error("Error al paginar:", error);
+      showAlert("Error al cargar datos", "error");
+    }
+  }
+
+  reset() {
+    this.load(1);
+  }
+
+  _buildControls() {
+    const container = document.getElementById(this._controlsId);
+    if (!container) return;
+
+    const opts = this._rowOptions
+      .map((n) => `<option value="${n}" ${n === this._perPage ? 'selected' : ''}>${n}</option>`)
+      .join("");
+
+    container.innerHTML = `
+      <div class="pagination-bar">
+        <div class="pagination-left">
+          <span class="pagination-label">Filas por página:</span>
+          <select class="pagination-select" id="${this._controlsId}-per-page">
+            ${opts}
+          </select>
+          <span class="pagination-info" id="${this._controlsId}-info"></span>
+        </div>
+        <div class="pagination-right">
+          <button class="pagination-btn" id="${this._controlsId}-prev">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <span class="pagination-pages" id="${this._controlsId}-pages"></span>
+          <button class="pagination-btn" id="${this._controlsId}-next">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>`;
+
+    document
+      .getElementById(`${this._controlsId}-per-page`)
+      .addEventListener("change", (e) => {
+        this._perPage = Number(e.target.value);
+        this.load(1);
+      });
+
+    document
+      .getElementById(`${this._controlsId}-prev`)
+      .addEventListener("click", () => {
+        if (this._page > 1) {
+          this.load(this._page - 1);
+        }
+      });
+
+    document
+      .getElementById(`${this._controlsId}-next`)
+      .addEventListener("click", () => {
+        if (this._page < this._totalPages) {
+          this.load(this._page + 1);
+        }
+      });
+  }
+
+  _updateControls() {
+    const start = (this._page - 1) * this._perPage;
+    
+    const infoEl = document.getElementById(`${this._controlsId}-info`);
+    const pagesEl = document.getElementById(`${this._controlsId}-pages`);
+    const prevBtn = document.getElementById(`${this._controlsId}-prev`);
+    const nextBtn = document.getElementById(`${this._controlsId}-next`);
+
+    if (infoEl)
+      infoEl.textContent = `${this._total === 0 ? 0 : start + 1}–${Math.min(start + this._perPage, this._total)} de ${this._total}`;
+    if (pagesEl) pagesEl.textContent = `Página ${this._page} / ${this._totalPages}`;
+    if (prevBtn) prevBtn.disabled = this._page <= 1;
+    if (nextBtn) nextBtn.disabled = this._page >= this._totalPages;
+  }
+}
 
 // ── Manejo de Modales ─────────────────────────────────────────────────────────
 

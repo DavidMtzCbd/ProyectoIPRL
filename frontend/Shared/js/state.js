@@ -19,3 +19,11 @@ export function setUsuario(usuario) {
   appState.usuario = usuario;
   localStorage.setItem("usuario", usuario);
 }
+
+export function clearAuth() {
+  appState.token = "";
+  appState.usuario = "";
+  appState.alumnoActivo = null;
+  localStorage.removeItem("token");
+  localStorage.removeItem("usuario");
+}

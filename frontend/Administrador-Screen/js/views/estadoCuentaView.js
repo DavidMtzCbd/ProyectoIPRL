@@ -413,14 +413,23 @@ function renderHeader(alumno, semestres) {
     <span class="ec-chip"><i class="bi bi-circle-fill ec-chip-icon"></i> ${alumno.estatus}</span>`;
 
   // Precios del semestre más reciente
-  const sem = semestres.length ? semestres[semestres.length - 1] : null;
+  const semestresOrdenados = [...semestres].sort((a, b) => {
+    const numA = a.numCuatrimestre ?? a.numSemestre ?? 0;
+    const numB = b.numCuatrimestre ?? b.numSemestre ?? 0;
+    return numA - numB;
+  });
+  const sem = semestresOrdenados.length ? semestresOrdenados[semestresOrdenados.length - 1] : null;
+  const sem1 = semestresOrdenados.length ? semestresOrdenados[0] : null;
+
   if (sem) {
     const beca = sem.descuentoPorcentaje ?? 0;
     const mul = 1 - beca / 100;
+    const valInscripcion = sem1 && (sem1.numSemestre === 1 || sem1.numCuatrimestre === 1) ? sem1.inscripcion : (sem.inscripcion ?? 0);
+
     document.getElementById("ec-prices").innerHTML = `
       <span class="price-label">Inscripción</span>
-      <span class="price-base">${fmt(sem.inscripcion)}</span>
-      <span class="price-final">${fmt(sem.inscripcion)}</span>
+      <span class="price-base">${fmt(valInscripcion)}</span>
+      <span class="price-final">${fmt(valInscripcion)}</span>
       <span class="price-label">Re-Inscripción</span>
       <span class="price-base">${fmt(sem.reinscripcion)}</span>
       <span class="price-final">${fmt(sem.reinscripcion)}</span>

@@ -33,9 +33,9 @@ window.handleGoogleCredential = async function (response) {
     console.log("✅ Acceso concedido | Rol:", data.rol);
 
     if (data.rol === "alumno") {
-      window.location.href = "Alumno-Screen/index.html";
+      window.location.replace("Alumno-Screen/index.html");
     } else {
-      window.location.href = "Administrador-Screen/index.html";
+      window.location.replace("Administrador-Screen/index.html");
     }
   } catch (error) {
     loadingEl.style.display = "none";

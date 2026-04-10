@@ -49,6 +49,6 @@ function setupLogoutListeners() {
       "%c👋 Sesión cerrada - Token eliminado",
       "color: red; font-weight: bold;",
     );
-    window.location.href = "../login.html";
+    window.location.replace("../login.html");
   });
 }

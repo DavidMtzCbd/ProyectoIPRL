@@ -501,11 +501,18 @@ function initSemestre() {
   // Solo colegiatura y beca disparan el preview
   ["s-colegiatura", "s-beca"].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener("input", actualizarPreviewBeca);
+    if (el) {
+      const newEl = el.cloneNode(true);
+      el.replaceWith(newEl);
+      newEl.addEventListener("input", actualizarPreviewBeca);
+    }
   });
 
-  document.getElementById("form-semestre-alumno")
-    ?.addEventListener("submit", async (e) => {
+  const formS = document.getElementById("form-semestre-alumno");
+  if (formS) {
+    const newFormS = formS.cloneNode(true);
+    formS.replaceWith(newFormS);
+    newFormS.addEventListener("submit", async (e) => {
       e.preventDefault();
       const sId = document.getElementById("s-id").value;
       const alumnoID = document.getElementById("s-alumno-id").value;
@@ -559,6 +566,7 @@ function initSemestre() {
         showAlert("Error: " + error.message, "error");
       }
     });
+  }
 }
 
 // ── Cuatrimestres (Maestrías) ─────────────────────────────────────────────────
@@ -762,11 +770,18 @@ function actualizarPreviewBecaCuatrimestre() {
 function initCuatrimestre() {
   ["c-colegiatura", "c-beca"].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener("input", actualizarPreviewBecaCuatrimestre);
+    if (el) {
+      const newEl = el.cloneNode(true);
+      el.replaceWith(newEl);
+      newEl.addEventListener("input", actualizarPreviewBecaCuatrimestre);
+    }
   });
 
-  document.getElementById("form-cuatrimestre-alumno")
-    ?.addEventListener("submit", async (e) => {
+  const formC = document.getElementById("form-cuatrimestre-alumno");
+  if (formC) {
+    const newFormC = formC.cloneNode(true);
+    formC.replaceWith(newFormC);
+    newFormC.addEventListener("submit", async (e) => {
       e.preventDefault();
       const cId = document.getElementById("c-id").value;
       const alumnoID = document.getElementById("c-alumno-id").value;
@@ -820,6 +835,7 @@ function initCuatrimestre() {
         showAlert("Error: " + error.message, "error");
       }
     });
+  }
 }
 
 function initAgregarAlumno() {

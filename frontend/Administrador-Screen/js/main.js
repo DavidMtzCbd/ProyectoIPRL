@@ -17,7 +17,7 @@ const VIEW_LOGIC = {
   estadoCuenta: initEstadoCuenta,
 };
 
-async function loadView(viewName) {
+async function loadView(viewName, pushState = true) {
   const container = document.getElementById("view-container");
 
   try {
@@ -30,6 +30,11 @@ async function loadView(viewName) {
     container.innerHTML = html;
     changeViewUI(viewName);
     appState.currentView = viewName;
+
+    // Guardar en el historial del navegador si es necesario
+    if (pushState) {
+      history.pushState({ view: viewName }, "", `?view=${viewName}`);
+    }
 
     //Se ejecuta la logica especifica de la vista
     if (VIEW_LOGIC[viewName]) {
@@ -64,12 +69,26 @@ async function bootstrap() {
   // Navegación programática desde otras vistas (ej: Estado de Cuenta desde Alumnos)
   document.addEventListener("navigate", (e) => loadView(e.detail));
 
+  // Manejar el evento de retroceso/avance del navegador
+  window.addEventListener("popstate", (e) => {
+    if (e.state && e.state.view) {
+      loadView(e.state.view, false);
+    } else {
+      const urlParams = new URLSearchParams(window.location.search);
+      const view = urlParams.get('view') || "dashboard";
+      loadView(view, false);
+    }
+  });
+
   //Cargar la vista inicial
   if (appState.token) {
     initSessionMonitor(); // Monitorear el progreso de la sesión JWT
-    await loadView("dashboard");
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialView = urlParams.get('view') || "dashboard";
+    history.replaceState({ view: initialView }, "", `?view=${initialView}`);
+    await loadView(initialView, false);
   } else {
-    window.location.href = "../login.html";
+    window.location.replace("../login.html");
   }
 }
 
