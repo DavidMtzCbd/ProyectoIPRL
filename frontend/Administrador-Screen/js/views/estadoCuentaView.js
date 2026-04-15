@@ -76,8 +76,10 @@ function colsParaCuatrimestre(numCuatrimestre, periodo) {
   // periodo ej. "2026 Mayo-Agosto" → meses [5,6,7,8]
   const mesesStr = (periodo ?? "").split(" ")[1] ?? "Enero-Abril";
   const meses = CUATRI_PERIODOS[mesesStr] ?? [1, 2, 3, 4];
-  const etiqueta = numCuatrimestre === 1 ? "Inscripción" : "Re-Inscripción";
-  return [etiqueta, ...meses]; // 5 elementos: [label, m1, m2, m3, m4]
+  if (numCuatrimestre === 1) {
+    return ["Inscripción", ...meses]; // 5 elementos
+  }
+  return [...meses]; // 4 elementos sin reinscripción
 }
 
 // ── Algoritmo de mapeo ────────────────────────────────────────────────────────
@@ -198,29 +200,31 @@ function mapearPagosCuatrimestre(cuatrimestre, pagos) {
   const esperadoColegiatura =
     cuatrimestre.colegiaturaMensual *
     (1 - (cuatrimestre.descuentoPorcentaje ?? 0) / 100);
-  // La beca NO aplica en inscripción/reinscripción
-  const esperadoInscripcion =
-    cuatrimestre.numCuatrimestre === 1
-      ? cuatrimestre.inscripcion
-      : cuatrimestre.reinscripcion;
 
-  const esperados = cols.map((_, i) =>
-    i === 0 ? esperadoInscripcion : esperadoColegiatura,
-  );
+  const celdas = cols.map((c) => {
+    if (typeof c === "string") {
+      return {
+        montoPagado: 0,
+        fechaPago: null,
+        esperado: cuatrimestre.inscripcion,
+        esCondonacion: false,
+        esInscripcion: true
+      };
+    } else {
+      return {
+        montoPagado: 0,
+        fechaPago: null,
+        esperado: esperadoColegiatura,
+        esCondonacion: false,
+        esInscripcion: false
+      };
+    }
+  });
 
-  const celdas = cols.map((_, i) => ({
-    montoPagado: 0,
-    fechaPago: null,
-    esperado: esperados[i],
-    esCondonacion: false,
-  }));
-
-  // cols[1..4] son números 1-based; getMonth() es 0-based → +1 para comparar
   pagos.forEach((p) => {
     const concepto = p.concepto ?? "";
     const esColegiatura = concepto.toLowerCase().includes("colegiatura");
     const esInscripcion = concepto === "Inscripción";
-    const esReinscripcion = concepto === "Reinscripción";
 
     if (concepto === "Condonación de deuda") {
       celdas[0].montoPagado += p.monto;
@@ -228,18 +232,15 @@ function mapearPagosCuatrimestre(cuatrimestre, pagos) {
       return;
     }
     if (esInscripcion && cuatrimestre.numCuatrimestre === 1) {
-      celdas[0].montoPagado += p.monto;
-      if (!celdas[0].fechaPago) celdas[0].fechaPago = p.fechaPago;
-      return;
-    }
-    if (esReinscripcion && cuatrimestre.numCuatrimestre > 1) {
-      celdas[0].montoPagado += p.monto;
-      if (!celdas[0].fechaPago) celdas[0].fechaPago = p.fechaPago;
+      if (celdas[0].esInscripcion) {
+        celdas[0].montoPagado += p.monto;
+        if (!celdas[0].fechaPago) celdas[0].fechaPago = p.fechaPago;
+      }
       return;
     }
     if (esColegiatura) {
       const mesDelPago = new Date(p.fechaPago).getMonth() + 1; // 1-based
-      const colIdx = cols.findIndex((c, i) => i > 0 && c === mesDelPago);
+      const colIdx = cols.findIndex((c) => c === mesDelPago);
       if (colIdx !== -1) {
         celdas[colIdx].montoPagado += p.monto;
         if (!celdas[colIdx].fechaPago) celdas[colIdx].fechaPago = p.fechaPago;
@@ -254,7 +255,7 @@ function mapearPagosCuatrimestre(cuatrimestre, pagos) {
 
   return celdas.map((c, i) => {
     let saldoVencido;
-    if (i === 0) {
+    if (c.esInscripcion) {
       saldoVencido = c.montoPagado - c.esperado;
     } else {
       const mesCol = cols[i]; // 1-based
@@ -274,9 +275,9 @@ function renderCuatrimestreTabla(cuatrimestre, pagos) {
   const saldoClass = saldoTotal >= 0 ? "ec-saldo--verde" : "ec-saldo--rojo";
   const tieneCondonacion = celdas.some(c => c.esCondonacion);
 
-  // Encabezados: col 0 = "Inscripción"/"Re-Inscripción", cols 1..4 = nombre completo del mes
+  // Encabezados: si es string, es inscripción, sino es mes
   const ths = cols
-    .map((c, i) => `<th>${i === 0 ? cols[0] : MES_NOMBRES_FULL[c]}</th>`)
+    .map((c) => `<th>${typeof c === "string" ? c : MES_NOMBRES_FULL[c]}</th>`)
     .join("");
 
   function celda(row) {
@@ -392,6 +393,61 @@ function renderSemestreTabla(semestre, pagos, opciones = {}) {
     </div>
     <div class="ec-sem-saldo ${saldoClass}">
       Saldo del ${etiqueta.toLowerCase()}: ${fmt(saldoTotal)}
+    </div>
+  </div>`;
+}
+
+// ── Renderización de Titulación ──────────────────────────────────────────────
+
+function renderTitulacionTabla(alumno, pagos) {
+  if (!alumno.titulacion || !alumno.titulacion.activo) return "";
+
+  const pagosCertificado = pagos.filter(p => p.concepto === "Certificados").reduce((acc, p) => acc + p.monto, 0);
+  const pagosTitulacion = pagos.filter(p => p.concepto === "Titulación").reduce((acc, p) => acc + p.monto, 0);
+
+  const pagoCerObj = pagos.filter(p => p.concepto === "Certificados").sort((a,b) => new Date(b.fechaPago) - new Date(a.fechaPago))[0];
+  const pagoTitObj = pagos.filter(p => p.concepto === "Titulación").sort((a,b) => new Date(b.fechaPago) - new Date(a.fechaPago))[0];
+
+  const saldoCer = pagosCertificado - alumno.titulacion.costoCertificado;
+  const saldoTit = pagosTitulacion - alumno.titulacion.costoTitulacion;
+  const saldoTotal = saldoCer + saldoTit;
+
+  return `
+  <div class="ec-section" style="margin-top: 2rem;">
+    <div class="ec-table-wrap">
+      <table class="ec-table ec-table-titulacion" style="border: 2px solid #000;">
+        <thead>
+          <tr>
+            <th colspan="4" style="text-align: center; color: #f26b21; border-bottom: none; font-size: 1.2rem;">Titulación</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th style="color: #154c79;">Certificado</th>
+            <th style="color: #154c79;">Titulación</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color: #154c79; font-weight: bold;">Monto Pagado</td>
+            <td class="ec-cell--pagado">${fmt(pagosCertificado)}</td>
+            <td class="ec-cell--pagado">${fmt(pagosTitulacion)}</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td style="color: #154c79; font-weight: bold;">Saldo Vencido</td>
+            <td class="${saldoCer < 0 ? 'ec-cell--vencido-neg' : 'ec-cell--vencido-pos'}">${fmt(Math.abs(saldoCer))}</td>
+            <td class="${saldoTit < 0 ? 'ec-cell--vencido-neg' : 'ec-cell--vencido-pos'}">${fmt(Math.abs(saldoTit))}</td>
+            <td style="font-weight: bold; color: #154c79;">${fmt(Math.abs(saldoTotal))}</td>
+          </tr>
+          <tr>
+            <td style="color: #154c79; font-weight: bold;">Fecha de Pago</td>
+            <td class="${pagoCerObj ? 'ec-cell--fecha' : 'ec-cell--empty'}">${pagoCerObj ? formatDate(pagoCerObj.fechaPago) : '—'}</td>
+            <td class="${pagoTitObj ? 'ec-cell--fecha' : 'ec-cell--empty'}">${pagoTitObj ? formatDate(pagoTitObj.fechaPago) : '—'}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>`;
 }
@@ -553,6 +609,11 @@ export async function initEstadoCuenta() {
       semContainer.innerHTML = `<div class="ec-section"><p class="ec-no-data">Sin ${label} registrados.</p></div>`;
     }
 
+    // Agregar tabla de titulación al final si está activa
+    if (alumno.titulacion && alumno.titulacion.activo) {
+      semContainer.innerHTML += renderTitulacionTabla(alumno, pagos);
+    }
+
     renderGlobalPagos(pagos);
     renderFacturacion(alumno);
 
@@ -590,6 +651,83 @@ export async function initEstadoCuenta() {
       btnNuevoClone.addEventListener("click", () => {
         if (esMaestria) abrirModalCuatrimestre(null, alumnoId);
         else abrirModalSemestre(null, alumnoId);
+      });
+
+      // Crear o clonar botón de Titulación
+      let btnTitulacion = document.getElementById("ec-btn-titulacion");
+      if (!btnTitulacion) {
+        btnTitulacion = document.createElement("button");
+        btnTitulacion.id = "ec-btn-titulacion";
+        btnTitulacion.className = "btn btn-secundario";
+        btnTitulacion.style.marginLeft = "10px";
+        btnTitulacion.innerHTML = '<i class="bi bi-mortarboard-fill"></i> Registrar Titulación';
+        btnNuevoClone.parentNode.insertBefore(btnTitulacion, btnNuevoClone.nextSibling);
+      }
+      const btnTitulacionClone = btnTitulacion.cloneNode(true);
+      btnTitulacion.replaceWith(btnTitulacionClone);
+      btnTitulacionClone.addEventListener("click", async () => {
+        if (alumno.titulacion?.activo) {
+          showAlert("La titulación ya está activa para este alumno.", "info");
+          return;
+        }
+
+        /* globals Swal */
+        if (typeof Swal !== "undefined") {
+          const { value: formValues } = await Swal.fire({
+            title: 'Registrar Titulación',
+            html:
+              '<label>Costo del Certificado</label>' +
+              '<input id="swal-input-cert" type="number" step="0.01" class="swal2-input">' +
+              '<label>Costo de la Titulación</label>' +
+              '<input id="swal-input-tit" type="number" step="0.01" class="swal2-input">',
+            focusConfirm: false,
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+              const cCert = document.getElementById('swal-input-cert').value;
+              const cTit = document.getElementById('swal-input-tit').value;
+              if (!cCert || !cTit) {
+                Swal.showValidationMessage('Por favor completa ambos montos.');
+              }
+              return { cCert: Number(cCert), cTit: Number(cTit) };
+            }
+          });
+
+          if (formValues) {
+            try {
+              await updateAlumno(alumnoId, {
+                titulacion: {
+                  activo: true,
+                  costoCertificado: formValues.cCert,
+                  costoTitulacion: formValues.cTit
+                }
+              });
+              showAlert("Costos de titulación registrados correctamente.", "success");
+              await initEstadoCuenta();
+            } catch (error) {
+              showAlert("Error al registrar titulación: " + error.message, "error");
+            }
+          }
+        } else {
+          // Fallback if sweetalert not loaded
+          const cCert = prompt("Ingresa el costo del Certificado:");
+          const cTit = prompt("Ingresa el costo de la Titulación:");
+          if (cCert && cTit) {
+            try {
+              await updateAlumno(alumnoId, {
+                titulacion: {
+                  activo: true,
+                  costoCertificado: Number(cCert),
+                  costoTitulacion: Number(cTit)
+                }
+              });
+              showAlert("Costos de titulación registrados correctamente.", "success");
+              await initEstadoCuenta();
+            } catch (error) {
+              showAlert("Error al registrar titulación: " + error.message, "error");
+            }
+          }
+        }
       });
     }
       

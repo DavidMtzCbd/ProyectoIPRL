@@ -17,6 +17,7 @@ import {
   showAlert,
   formatDate,
   formatMoney,
+  ServerPaginator,
   Paginator,
   loadModals,
 } from "../../../Shared/js/ui.js";
@@ -47,24 +48,32 @@ function bindCloseButtons() {
 
 // ── Cargar tabla de alumnos ───────────────────────────────────────────────────
 
-let todosLosAlumnos = [];
-
 // Paginador de la tabla de alumnos
-const paginadorAlumnos = new Paginator({
+const paginadorAlumnos = new ServerPaginator({
   controlsId: "alumnos-pagination",
+  rowOptions: [10, 15, 20],
   renderPage: renderTablaAlumnos,
+  fetchData: async (page, limit) => {
+    const texto = document.getElementById("filtro-alumno-texto")?.value.trim() || "";
+    const estatus = document.getElementById("filtro-alumno-estatus")?.value || "";
+    
+    const params = { pagina: page, limite: limit };
+    if (texto) params.busqueda = texto;
+    if (estatus) params.estatus = estatus;
+    
+    const res = await getAlumnos(params);
+    return {
+      data: res.alumnos,
+      total: res.total,
+      totalPages: res.totalPaginas,
+      page: res.paginaActual
+    };
+  }
 });
 
 async function cargarAlumnos() {
   try {
-    const data = await getAlumnos();
-    // Ordenar alfabéticamente: apellido paterno → materno → nombre
-    todosLosAlumnos = data.sort((a, b) => {
-      const nombreA = `${a.apellidoPaterno} ${a.apellidoMaterno} ${a.nombre}`;
-      const nombreB = `${b.apellidoPaterno} ${b.apellidoMaterno} ${b.nombre}`;
-      return nombreA.localeCompare(nombreB, "es", { sensitivity: "base" });
-    });
-    paginadorAlumnos.setData(todosLosAlumnos);
+    await paginadorAlumnos.load(1);
   } catch (error) {
     showAlert("Error al cargar alumnos: " + error.message, "error");
   }
@@ -135,7 +144,6 @@ function initEditarAlumno() {
         closeModal("modal-editar-alumno");
         showAlert("Alumno actualizado correctamente ✔", "success");
         await cargarAlumnos();
-        initFiltros();
       } catch (error) {
         showAlert("Error al actualizar: " + error.message, "error");
       }
@@ -150,33 +158,21 @@ function initFiltros() {
   const btnLimpiar = document.getElementById("btn-limpiar-filtros-alumno");
 
   function aplicarFiltros() {
-    const texto = inputTexto.value.toLowerCase().trim();
-    const estatus = selectEstatus.value;
-
-    const filtrados = todosLosAlumnos.filter((a) => {
-      const nombreCompleto =
-        `${a.nombre} ${a.apellidoPaterno} ${a.apellidoMaterno}`.toLowerCase();
-      const coincideTexto =
-        !texto ||
-        nombreCompleto.includes(texto) ||
-        String(a.matricula).includes(texto) ||
-        a.ofertaAcademica.toLowerCase().includes(texto);
-
-      const coincideEstatus = !estatus || a.estatus === estatus;
-
-      return coincideTexto && coincideEstatus;
-    });
-
-    paginadorAlumnos.setData(filtrados);
+    paginadorAlumnos.reset(); // Vuelve a cargar desde la página 1
   }
 
-  inputTexto.addEventListener("input", aplicarFiltros);
+  let debounceTimer;
+  inputTexto.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(aplicarFiltros, 300);
+  });
+  
   selectEstatus.addEventListener("change", aplicarFiltros);
 
   btnLimpiar.addEventListener("click", () => {
     inputTexto.value = "";
     selectEstatus.value = "";
-    paginadorAlumnos.setData(todosLosAlumnos);
+    paginadorAlumnos.reset();
   });
 }
 function fmt(v) {
@@ -865,7 +861,6 @@ function initAgregarAlumno() {
         closeModal("modal-agregar-alumno");
         showAlert(`Alumno registrado ✔ — Gmail vinculado: ${gmail}`, "success");
         await cargarAlumnos();
-        initFiltros();
       } catch (error) {
         showAlert("Error: " + error.message, "error");
       }

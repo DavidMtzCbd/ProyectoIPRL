@@ -26,6 +26,7 @@ async function recalcularAlumno(alumnoId) {
     cuatrimestres,
     pagos,
     alumno.estatus,
+    alumno
   );
 
   // Se guardan los nuevos valores en la base de datos

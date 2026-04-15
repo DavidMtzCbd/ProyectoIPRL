@@ -61,6 +61,7 @@ function calcularNuevoSaldoYEstatus(
   cuatrimestres,
   pagos,
   estatusActual,
+  alumno = {},
   fechaActual = new Date(),
 ) {
   const totalEsperadoSemestres = semestres.reduce((acc, s) => {
@@ -76,10 +77,11 @@ function calcularNuevoSaldoYEstatus(
   //Se calcula el total esperado de los cuatrimestres
   const totalEsperadoCuatrimestres = cuatrimestres.reduce((acc, c) => {
     const mul = 1 - (c.descuentoPorcentaje ?? 0) / 100;
+    // Cuatrimestre solo cobra inscripción en el primer cuatrimestre, a partir de ahí no hay reinscripción.
     const col0 =
       c.numCuatrimestre === 1
         ? (c.inscripcion ?? 0) * mul
-        : (c.reinscripcion ?? 0) * mul;
+        : 0;
     const meses =
       (c.colegiaturaMensual ?? 0) *
       mul *
@@ -87,7 +89,13 @@ function calcularNuevoSaldoYEstatus(
     return acc + col0 + meses;
   }, 0);
 
-  const totalEsperado = totalEsperadoSemestres + totalEsperadoCuatrimestres;
+  //Se suman los costos de titulación si el alumno los tiene activos
+  let totalEsperadoTitulacion = 0;
+  if (alumno?.titulacion?.activo) {
+    totalEsperadoTitulacion = (alumno.titulacion.costoCertificado || 0) + (alumno.titulacion.costoTitulacion || 0);
+  }
+
+  const totalEsperado = totalEsperadoSemestres + totalEsperadoCuatrimestres + totalEsperadoTitulacion;
 
   const totalPagado = pagos.reduce((acc, p) => acc + (p.monto ?? 0), 0);
 
