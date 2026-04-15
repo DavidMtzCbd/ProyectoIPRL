@@ -54,14 +54,14 @@
             </div>
           </div>
 
-          <div class="form-group">
+          <!-- Inscripción: solo visible en Cuatrimestre 1 -->
+          <div class="form-group" id="c-inscripcion-group">
             <label for="c-inscripcion">Inscripción base ($)</label>
             <input
               id="c-inscripcion"
               type="number"
               min="0"
               step="0.01"
-              required
               placeholder="0.00"
             />
           </div>
@@ -99,16 +99,26 @@
               placeholder="0"
             />
           </div>
+          <!-- Selector de estatus: solo visible en modo edición -->
+          <div class="form-group" id="c-estatus-group" style="display:none">
+            <label for="c-estatus">Estatus del cuatrimestre</label>
+            <select id="c-estatus">
+              <option value="En curso">En curso</option>
+              <option value="Finalizado">Finalizado</option>
+            </select>
+          </div>
         </div>
-        <!-- Preview de precios con beca -->
+        <!-- Aviso cuando el cuatrimestre está finalizado -->
+        <div id="c-finalizado-notice" class="s-finalizado-notice" style="display:none">
+          <i class="bi bi-lock-fill"></i> Este cuatrimestre ya finalizó y no puede modificarse.
+        </div>
+        <!-- Preview de beca: solo aplica a colegiatura -->
         <div id="cuatrimestre-preview" class="semestre-preview">
           <p class="semestre-preview__title">
-            <i class="bi bi-stars"></i> Vista previa con beca aplicada
+            <i class="bi bi-stars"></i> Beca aplicada a colegiatura
           </p>
           <div class="semestre-preview__values">
-            <span>Inscripción: <strong id="prev-c-insc">—</strong></span>
-            <span>Reinscripción: <strong id="prev-c-reinsc">—</strong></span>
-            <span>Colegiatura: <strong id="prev-c-cole">—</strong></span>
+            <span>Colegiatura con beca: <strong id="prev-c-cole">—</strong></span>
           </div>
         </div>
       </div>

@@ -43,7 +43,7 @@ function checkExpiration() {
       alert(
         "Tu sesión ha expirado por inactividad. Serás redirigido al inicio de sesión.",
       );
-      window.location.href = "../login.html";
+      window.location.replace("../login.html");
     }
   } catch (error) {
     console.error("Error al monitorear el token JWT:", error);

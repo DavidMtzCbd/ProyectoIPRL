@@ -53,14 +53,14 @@
             </div>
           </div>
 
-          <div class="form-group">
+          <!-- Inscripción: solo visible en Semestre 1 -->
+          <div class="form-group" id="s-inscripcion-group">
             <label for="s-inscripcion">Inscripción base ($)</label>
             <input
               id="s-inscripcion"
               type="number"
               min="0"
               step="0.01"
-              required
               placeholder="0.00"
             />
           </div>
@@ -98,16 +98,26 @@
               placeholder="0"
             />
           </div>
+          <!-- Selector de estatus: solo visible en modo edición -->
+          <div class="form-group" id="s-estatus-group" style="display:none">
+            <label for="s-estatus">Estatus del semestre</label>
+            <select id="s-estatus">
+              <option value="En curso">En curso</option>
+              <option value="Finalizado">Finalizado</option>
+            </select>
+          </div>
         </div>
-        <!-- Preview de precios con beca -->
+        <!-- Aviso cuando el semestre está finalizado -->
+        <div id="s-finalizado-notice" class="s-finalizado-notice" style="display:none">
+          <i class="bi bi-lock-fill"></i> Este semestre ya finalizó y no puede modificarse.
+        </div>
+        <!-- Preview de beca: solo aplica a colegiatura -->
         <div id="semestre-preview" class="semestre-preview">
           <p class="semestre-preview__title">
-            <i class="bi bi-stars"></i> Vista previa con beca aplicada
+            <i class="bi bi-stars"></i> Beca aplicada a colegiatura
           </p>
           <div class="semestre-preview__values">
-            <span>Inscripción: <strong id="prev-insc">—</strong></span>
-            <span>Reinscripción: <strong id="prev-reinsc">—</strong></span>
-            <span>Colegiatura: <strong id="prev-cole">—</strong></span>
+            <span>Colegiatura con beca: <strong id="prev-cole">—</strong></span>
           </div>
         </div>
       </div>

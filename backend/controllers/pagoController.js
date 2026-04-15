@@ -10,17 +10,14 @@ exports.crearPago = async (req, res) => {
     const ultimoPago = await Pago.findOne({}, { movimiento: 1 }).sort({ movimiento: -1 });
     const movimiento = ultimoPago && ultimoPago.movimiento ? ultimoPago.movimiento + 1 : 1;
 
-    // ── Generar folio de factura (solo si requiere factura) ────────────────────
-    let folioFactura = null;
-    if (req.body.factura === "Sí") {
-      const ultimaFactura = await Pago.findOne({ folioFactura: { $ne: null } }, { folioFactura: 1 }).sort({ folioFactura: -1 });
-      let numFolio = 1;
-      if (ultimaFactura && ultimaFactura.folioFactura) {
-         // Extraer el número del formato F-0001
-         numFolio = parseInt(ultimaFactura.folioFactura.replace('F-', ''), 10) + 1;
-      }
-      folioFactura = `F-${String(numFolio).padStart(4, "0")}`;
+    // ── Generar folio de factura (siempre) ────────────────────
+    const ultimaFactura = await Pago.findOne({ folioFactura: { $ne: null } }, { folioFactura: 1 }).sort({ folioFactura: -1 });
+    let numFolio = 1;
+    if (ultimaFactura && ultimaFactura.folioFactura) {
+       // Extraer el número del formato F-0001
+       numFolio = parseInt(ultimaFactura.folioFactura.replace('F-', ''), 10) + 1;
     }
+    const folioFactura = `F-${String(numFolio).padStart(4, "0")}`;
 
     const pago = await Pago.create({ ...req.body, movimiento, folioFactura });
 

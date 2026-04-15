@@ -1,4 +1,4 @@
-import { appState } from "./state.js";
+import { appState, clearAuth } from "./state.js";
 
 export const API_BASE = "http://localhost:3000/api";
 const API_BASE_URL = API_BASE;
@@ -19,6 +19,18 @@ async function request(path, options = {}) {
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      clearAuth();
+      const currentPath = window.location.pathname;
+      if (currentPath.includes("Administrador-Screen") || currentPath.includes("Alumno-Screen")) {
+        window.location.replace("../login.html");
+      } else {
+        window.location.replace("login.html");
+      }
+      // Detenemos la ejecución tirando el error de inmediato
+      throw new Error("Sesión expirada. Redirigiendo a inicio de sesión...");
+    }
+
     const payload = await response.json().catch(() => ({}));
     const message = payload.message ?? payload.mensaje ?? "Error inesperado";
     throw new Error(message);
@@ -33,8 +45,15 @@ export function getMe() {
 
 // ── Alumnos ──────────────────────────────────────────────────────────────────
 
-export function getAlumnos() {
-  return request("/alumnos");
+export function getAlumnos(params = {}) {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== "") {
+      query.append(key, value);
+    }
+  }
+  const qStr = query.toString();
+  return request(`/alumnos${qStr ? '?' + qStr : ''}`);
 }
 
 export function getAlumnoById(id) {

@@ -254,7 +254,8 @@ function initRegistrarPago() {
     // Cargar catálogo si aún no está
     if (!catalogoAlumnos.length) {
       try {
-        catalogoAlumnos = await getAlumnos();
+        const res = await getAlumnos();
+        catalogoAlumnos = res.alumnos || [];
       } catch {
         // Si falla, la búsqueda por nombre simplemente no mostrará resultados
       }

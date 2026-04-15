@@ -45,6 +45,12 @@ const cuatrimestreSchema = new mongoose.Schema(
       required: true,
     },
 
+    estatusSemestre: {
+      type: String,
+      enum: ["En curso", "Finalizado"],
+      default: "En curso",
+    },
+
     totalPagado: {
       type: Number,
       default: 0,

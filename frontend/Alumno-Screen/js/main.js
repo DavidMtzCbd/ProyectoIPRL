@@ -141,7 +141,7 @@ async function guardarFacturacion() {
 async function bootstrap() {
   // 1. Verificar sesión
   if (!appState.token) {
-    window.location.href = "../login.html";
+    window.location.replace("../login.html");
     return;
   }
 
@@ -152,7 +152,7 @@ async function bootstrap() {
 
     // Si no es alumno, redirigir al panel admin
     if (me.rol !== "alumno" || !me.alumno) {
-      window.location.href = "../Administrador-Screen/index.html";
+      window.location.replace("../Administrador-Screen/index.html");
       return;
     }
 
@@ -191,7 +191,7 @@ async function bootstrap() {
   } catch (error) {
     // Token expirado o inválido
     console.error("Bootstrap error:", error);
-    window.location.href = "../login.html";
+    window.location.replace("../login.html");
   }
 
   // Modal compartido de Cerrar sesión

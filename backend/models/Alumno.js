@@ -61,6 +61,13 @@ const alumnoSchema = new mongoose.Schema(
 
     // ── Notas del administrador ───────────────────────────────────
     notas: { type: String, default: "" },
+
+    // ── Titulación y Certificado ──────────────────────────────────
+    titulacion: {
+      activo: { type: Boolean, default: false },
+      costoCertificado: { type: Number, default: 0 },
+      costoTitulacion: { type: Number, default: 0 }
+    }
   },
   { timestamps: true },
 );
