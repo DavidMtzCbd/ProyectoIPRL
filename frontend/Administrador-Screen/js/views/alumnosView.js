@@ -309,6 +309,11 @@ async function abrirDetalleAlumno(id) {
     if (daEstatus) daEstatus.innerHTML = badgeEstatus(alumno.estatus);
 
     // Semestres o Cuatrimestres
+    const tituloPeriodos = document.getElementById("titulo-periodos-colegiatura");
+    if (tituloPeriodos) {
+      tituloPeriodos.textContent = esMaestria ? "CUATRIMESTRES Y COLEGIATURA" : "SEMESTRES Y COLEGIATURA";
+    }
+
     const semContainer = document.getElementById("semestres-lista");
     if (semContainer) {
       if (esMaestria) renderCuatrimestresEnDetalle(periodos);
@@ -604,12 +609,18 @@ function renderCuatrimestresEnDetalle(cuatrimestres) {
             <i class="bi bi-pencil-fill"></i> Editar
           </button>`;
 
+      // FIX #4: Cuatrimestres no tienen Reinscripción. Cuatri 1 muestra Inscripción+Colegiatura,
+      // cuatrimestres 2+ solo muestran Colegiatura.
+      const detalles = c.numCuatrimestre === 1
+        ? `Inscripción: ${fmt(c.inscripcion)} · Colegiatura: ${fmt(c.colegiaturaMensual)}`
+        : `Colegiatura: ${fmt(c.colegiaturaMensual)}`;
+
       return `
     <div class="semestre-item">
       <div class="semestre-item-info">
         <strong class="semestre-item-titulo">Cuatrimestre ${c.numCuatrimestre} — ${c.periodo}</strong>
         <div class="semestre-item-detalles">
-          Inscripción: ${fmt(c.inscripcion)} · Reinscripción: ${fmt(c.reinscripcion)} · Colegiatura: ${fmt(c.colegiaturaMensual)}
+          ${detalles}
         </div>
       </div>
       ${estatusBadge} ${beca} ${btnEditar}
@@ -876,6 +887,7 @@ export async function initAlumnos() {
     "components/modals/alumnos/modal-detalle-alumno.html",
     "components/modals/alumnos/modal-semestre-alumno.html",
     "components/modals/alumnos/modal-cuatrimestre-alumno.html",
+    "components/modals/alumnos/modal-titulacion-alumno.html",
   ]);
   bindCloseButtons();
   initAgregarAlumno();
