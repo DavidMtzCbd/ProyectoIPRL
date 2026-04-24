@@ -25,23 +25,25 @@ exports.getAlumnos = async (req, res) => {
     }
 
     if (busqueda) {
-      const isNum = !isNaN(busqueda) && busqueda.trim() !== '';
+      const isNum = !isNaN(busqueda) && busqueda.trim() !== "";
       if (isNum) {
-        filtro.$or = [
-          { matricula: Number(busqueda) }
-        ];
+        filtro.$or = [{ matricula: Number(busqueda) }];
       } else {
         filtro.$or = [
           { nombre: { $regex: busqueda, $options: "i" } },
           { apellidoPaterno: { $regex: busqueda, $options: "i" } },
           { apellidoMaterno: { $regex: busqueda, $options: "i" } },
-          { ofertaAcademica: { $regex: busqueda, $options: "i" } }
+          { ofertaAcademica: { $regex: busqueda, $options: "i" } },
         ];
       }
     }
 
     // Orden alfabético
-    let query = Alumno.find(filtro).sort({ apellidoPaterno: 1, apellidoMaterno: 1, nombre: 1 });
+    let query = Alumno.find(filtro).sort({
+      apellidoPaterno: 1,
+      apellidoMaterno: 1,
+      nombre: 1,
+    });
 
     if (limite > 0) {
       const skip = (pagina - 1) * limite;
@@ -55,7 +57,7 @@ exports.getAlumnos = async (req, res) => {
       alumnos,
       total,
       paginaActual: pagina,
-      totalPaginas: limite > 0 ? Math.ceil(total / limite) : 1
+      totalPaginas: limite > 0 ? Math.ceil(total / limite) : 1,
     });
   } catch (error) {
     logger.error("Error al obtener lista de alumnos combinada", error);

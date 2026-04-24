@@ -221,14 +221,31 @@ function mapearPagosCuatrimestre(cuatrimestre, pagos) {
     }
   });
 
-  pagos.forEach((p) => {
+  // FIX #1: Filtrar pagos por cuatrimestreDestinoID (igual que semestres usan semestreDestinoID)
+  // Evita que pagos dirigidos a otro cuatrimestre se cuenten aquí.
+  const pagosParaEsteCuatrimestre = pagos.filter((p) => {
+    if (p.cuatrimestreDestinoID) {
+      return p.cuatrimestreDestinoID === cuatrimestre._id;
+    }
+    return true; // pagos automáticos (sin destino explícito) se evalúan en todos
+  });
+
+  pagosParaEsteCuatrimestre.forEach((p) => {
     const concepto = p.concepto ?? "";
     const esColegiatura = concepto.toLowerCase().includes("colegiatura");
     const esInscripcion = concepto === "Inscripción";
 
     if (concepto === "Condonación de deuda") {
-      celdas[0].montoPagado += p.monto;
-      celdas[0].esCondonacion = true;
+      // FIX #2: Para cuatrimestre 1, la condonación va a la celda de inscripción.
+      // Para cuatrimestres 2+, no hay celda de inscripción/reinscripción;
+      // solo se marca el flag para mostrar el badge sin distorsionar montos de colegiatura.
+      const inscIdx = celdas.findIndex(c => c.esInscripcion);
+      if (inscIdx !== -1) {
+        celdas[inscIdx].montoPagado += p.monto;
+        celdas[inscIdx].esCondonacion = true;
+      } else {
+        celdas.forEach(c => { c.esCondonacion = true; });
+      }
       return;
     }
     if (esInscripcion && cuatrimestre.numCuatrimestre === 1) {
@@ -452,7 +469,7 @@ function renderTitulacionTabla(alumno, pagos) {
   </div>`;
 }
 
-function renderHeader(alumno, semestres) {
+function renderHeader(alumno, semestres, esMaestria = false) {
   document.getElementById("ec-nombre").textContent =
     `${alumno.apellidoPaterno} ${alumno.apellidoMaterno} ${alumno.nombre}`;
   document.getElementById("ec-oferta").textContent = alumno.ofertaAcademica;
@@ -482,13 +499,17 @@ function renderHeader(alumno, semestres) {
     const mul = 1 - beca / 100;
     const valInscripcion = sem1 && (sem1.numSemestre === 1 || sem1.numCuatrimestre === 1) ? sem1.inscripcion : (sem.inscripcion ?? 0);
 
+    // FIX #3: Para maestrías (cuatrimestres) no se muestra Re-Inscripción porque no aplica.
+    const reinscripcionHtml = esMaestria ? `` : `
+      <span class="price-label">Re-Inscripción</span>
+      <span class="price-base">${fmt(sem.reinscripcion)}</span>
+      <span class="price-final">${fmt(sem.reinscripcion)}</span>`;
+
     document.getElementById("ec-prices").innerHTML = `
       <span class="price-label">Inscripción</span>
       <span class="price-base">${fmt(valInscripcion)}</span>
       <span class="price-final">${fmt(valInscripcion)}</span>
-      <span class="price-label">Re-Inscripción</span>
-      <span class="price-base">${fmt(sem.reinscripcion)}</span>
-      <span class="price-final">${fmt(sem.reinscripcion)}</span>
+      ${reinscripcionHtml}
       <span class="price-label">Colegiatura</span>
       <span class="price-base">${fmt(sem.colegiaturaMensual)}</span>
       <span class="price-final">${fmt(sem.colegiaturaMensual * mul)}</span>`;
@@ -583,7 +604,7 @@ export async function initEstadoCuenta() {
       periodos = await getSemestres(alumnoId).catch(() => []);
     }
 
-    renderHeader(alumno, periodos);
+    renderHeader(alumno, periodos, esMaestria);
 
     // Actualizar título y botón de la sección según tipo
     const tituloEl = document.querySelector(".ec-semestres-title");
@@ -665,53 +686,30 @@ export async function initEstadoCuenta() {
       }
       const btnTitulacionClone = btnTitulacion.cloneNode(true);
       btnTitulacion.replaceWith(btnTitulacionClone);
-      btnTitulacionClone.addEventListener("click", async () => {
+      btnTitulacionClone.addEventListener("click", () => {
         if (alumno.titulacion?.activo) {
           showAlert("La titulación ya está activa para este alumno.", "info");
           return;
         }
 
-        /* globals Swal */
-        if (typeof Swal !== "undefined") {
-          const { value: formValues } = await Swal.fire({
-            title: 'Registrar Titulación',
-            html:
-              '<label>Costo del Certificado</label>' +
-              '<input id="swal-input-cert" type="number" step="0.01" class="swal2-input">' +
-              '<label>Costo de la Titulación</label>' +
-              '<input id="swal-input-tit" type="number" step="0.01" class="swal2-input">',
-            focusConfirm: false,
-            showCancelButton: true,
-            cancelButtonText: 'Cancelar',
-            preConfirm: () => {
-              const cCert = document.getElementById('swal-input-cert').value;
-              const cTit = document.getElementById('swal-input-tit').value;
-              if (!cCert || !cTit) {
-                Swal.showValidationMessage('Por favor completa ambos montos.');
-              }
-              return { cCert: Number(cCert), cTit: Number(cTit) };
-            }
-          });
+        const modalOverlay = document.getElementById("modal-titulacion-alumno");
+        const form = document.getElementById("form-titulacion-alumno");
+        if (!modalOverlay || !form) {
+          showAlert("Error: Modal no encontrado.", "error");
+          return;
+        }
 
-          if (formValues) {
-            try {
-              await updateAlumno(alumnoId, {
-                titulacion: {
-                  activo: true,
-                  costoCertificado: formValues.cCert,
-                  costoTitulacion: formValues.cTit
-                }
-              });
-              showAlert("Costos de titulación registrados correctamente.", "success");
-              await initEstadoCuenta();
-            } catch (error) {
-              showAlert("Error al registrar titulación: " + error.message, "error");
-            }
-          }
-        } else {
-          // Fallback if sweetalert not loaded
-          const cCert = prompt("Ingresa el costo del Certificado:");
-          const cTit = prompt("Ingresa el costo de la Titulación:");
+        form.reset();
+        modalOverlay.style.display = "flex";
+
+        const newForm = form.cloneNode(true);
+        form.replaceWith(newForm);
+
+        newForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const cCert = document.getElementById("t-certificado").value;
+          const cTit = document.getElementById("t-titulacion").value;
+
           if (cCert && cTit) {
             try {
               await updateAlumno(alumnoId, {
@@ -722,12 +720,13 @@ export async function initEstadoCuenta() {
                 }
               });
               showAlert("Costos de titulación registrados correctamente.", "success");
+              modalOverlay.style.display = "none";
               await initEstadoCuenta();
             } catch (error) {
               showAlert("Error al registrar titulación: " + error.message, "error");
             }
           }
-        }
+        });
       });
     }
       

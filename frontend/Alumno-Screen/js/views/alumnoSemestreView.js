@@ -40,17 +40,20 @@ export function renderSemestre(semestres, alumnoData) {
     {
       concepto: "Inscripción",
       base: inscBase,
-      final: inscBase * (1 - descuento / 100),
+      final: inscBase,
+      aplicaDescuento: false,
     },
     {
       concepto: "Reinscripción",
       base: reinscBase,
-      final: reinscBase * (1 - descuento / 100),
+      final: reinscBase,
+      aplicaDescuento: false,
     },
     {
       concepto: "Colegiatura mensual",
       base: colBase,
       final: colBase * (1 - descuento / 100),
+      aplicaDescuento: true,
     },
   ];
 
@@ -69,17 +72,21 @@ export function renderSemestre(semestres, alumnoData) {
     const sinBeca = clone.querySelector('.sin-beca');
     const becaPct = clone.querySelector('.beca-pct');
     
-    if (descuento > 0) {
+    const finalEl = clone.querySelector('.sem-final');
+
+    if (r.aplicaDescuento && descuento > 0) {
       if (becaPill) {
         becaPill.style.display = '';
         if (becaPct) becaPct.textContent = descuento;
       }
+      if (finalEl) finalEl.textContent = formatMoney(r.final);
     } else {
-      if (sinBeca) sinBeca.style.display = '';
+      if (sinBeca) {
+        sinBeca.textContent = "—";
+        sinBeca.style.display = '';
+      }
+      if (finalEl) finalEl.textContent = "—";
     }
-    
-    const finalEl = clone.querySelector('.sem-final');
-    if (finalEl) finalEl.textContent = formatMoney(r.final);
     
     tbody.appendChild(clone);
   });
