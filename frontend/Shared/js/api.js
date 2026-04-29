@@ -22,7 +22,10 @@ async function request(path, options = {}) {
     if (response.status === 401) {
       clearAuth();
       const currentPath = window.location.pathname;
-      if (currentPath.includes("Administrador-Screen") || currentPath.includes("Alumno-Screen")) {
+      if (
+        currentPath.includes("Administrador-Screen") ||
+        currentPath.includes("Alumno-Screen")
+      ) {
         window.location.replace("../login.html");
       } else {
         window.location.replace("login.html");
@@ -53,7 +56,7 @@ export function getAlumnos(params = {}) {
     }
   }
   const qStr = query.toString();
-  return request(`/alumnos${qStr ? '?' + qStr : ''}`);
+  return request(`/alumnos${qStr ? "?" + qStr : ""}`);
 }
 
 export function getAlumnoById(id) {
@@ -133,7 +136,10 @@ export function getCuatrimestres(alumnoId) {
 }
 
 export function createCuatrimestre(data) {
-  return request("/cuatrimestres", { method: "POST", body: JSON.stringify(data) });
+  return request("/cuatrimestres", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 export function updateCuatrimestre(id, data) {
