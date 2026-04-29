@@ -1,6 +1,6 @@
 import { appState, clearAuth } from "./state.js";
 
-export const API_BASE = "http://localhost:3000/api";
+export const API_BASE = "http://3.130.42.7/api";
 const API_BASE_URL = API_BASE;
 
 async function request(path, options = {}) {
